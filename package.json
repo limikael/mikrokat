@@ -1,0 +1,16 @@
+{
+  "name": "mikrokat",
+  "version": "1.0.0",
+  "bin": {
+    "mikrokat": "src/cli/mikrokat.js"
+  },
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/exports/default.js"
+  },
+  "dependencies": {
+    "commander": "^14.0.0",
+    "serve-fetch": "^1.0.4"
+  }
+}

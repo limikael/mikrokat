@@ -1,0 +1,6 @@
+node_modules
+test/**/.target
+test/**/.wrangler
+test/**/bin
+test/**/pkg
+yarn.lock

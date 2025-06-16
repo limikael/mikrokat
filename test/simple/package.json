@@ -1,0 +1,18 @@
+{
+  "name": "simple",
+  "scripts": {
+  	"dev": "mikrokat serve server.js",
+    "build": "mikrokat build server.js --target=fastly && js-compute-runtime ./server.fastly.js ./bin/main.wasm",
+    "build:cloudflare": "mikrokat build server.js --target=cloudflare",
+  	"dev:cloudflare": "yarn build:cloudlfare && wrangler dev server.cloudflare.js",
+    "dev:fastly": "fastly compute serve"
+  },
+  "dependencies": {
+  	"mikrokat": "link:../..",
+    "@fastly/js-compute": "^3.33.2"
+  },
+  "type": "module",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT"
+}
