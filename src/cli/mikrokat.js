@@ -14,6 +14,7 @@ program.name("mikrokat")
 	.description("Multi provider edge mikro framework.");
 
 program.command("serve")
+	.alias("dev")
 	.description("Serve from this machine.")
 	.argument("<entrypoint>","Server entrypoint.")
 	.option("--port <port>","Listening port.",3000)
