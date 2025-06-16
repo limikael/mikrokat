@@ -1,0 +1,6 @@
+{
+	"main": ".target/server.cloudflare.js",
+	"build": {
+		"command": "mikrokat build --target=cloudflare server.js --outfile=.target/server.cloudflare.js"
+	}
+}

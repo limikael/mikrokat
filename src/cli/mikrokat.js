@@ -32,7 +32,7 @@ program.command("build")
 	.argument("<entrypoint>","Server entrypoint.")
 	.option("--port <port>","Listening port.",3000)
 	.option("--outfile <outfile>","Where to write artifact.")
-	.addOption(new Option("--target <provider>","Provider to build for.").choices(["cloudflare","fastly"]))
+	.addOption(new Option("--target <provider>","Provider to build for.").choices(["cloudflare","fastly","vercel"]))
 	.action(async (entrypoint, options)=>{
 		let entrypointAbs=path.resolve(entrypoint);
 		let base=entrypointAbs.substr(0,entrypointAbs.lastIndexOf("."));

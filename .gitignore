@@ -3,4 +3,5 @@ test/**/.target
 test/**/.wrangler
 test/**/bin
 test/**/pkg
+test/*/api
 yarn.lock

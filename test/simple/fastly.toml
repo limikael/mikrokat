@@ -12,5 +12,5 @@ service_id = "5GSPb7qHPAsyDyYGUjyHC1"
 [local_server]
 
 [scripts]
-  build = "npm run build"
+  build = "npx mikrokat build server.js --target=fastly --outfile=.target/server.fastly.js && npx js-compute-runtime .target/server.fastly.js ./bin/main.wasm"
   post_init = "npm install"
