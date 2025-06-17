@@ -32,6 +32,13 @@ program.command("build")
 		await new MikrokatCli({program, options}).build();
 	});
 
+program.command("init")
+	.description("Initialize project and/or target.")
+	.addOption(new Option("--target <provider>","Provider to initialize.").choices(Object.keys(targetClasses))/*.env("TARGET")*/)
+	.action(async options=>{
+		await new MikrokatCli({program, options}).init();
+	});
+
 try {
 	await program.parseAsync();
 }

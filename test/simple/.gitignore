@@ -1,1 +1,3 @@
 .vercel
+.target
+node_modules

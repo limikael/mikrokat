@@ -1,8 +1,7 @@
 # This file describes a Fastly Compute package. To learn more visit:
 # https://www.fastly.com/documentation/reference/compute/fastly-toml
 
-authors = ["autodeploy-1dxur3lrih5prpzauv60ql@fastlyautomationaccount.com"]
-cloned_from = "https://github.com/fastly/compute-starter-kit-javascript-empty"
+authors = []
 description = ""
 language = "javascript"
 manifest_version = 3
@@ -12,5 +11,5 @@ service_id = "5GSPb7qHPAsyDyYGUjyHC1"
 [local_server]
 
 [scripts]
-  build = "npx mikrokat build server.js --target=fastly --outfile=.target/server.fastly.js && npx js-compute-runtime .target/server.fastly.js ./bin/main.wasm"
+  build = "TARGET=fastly npx mikrokat build && npx js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
   post_init = "npm install"

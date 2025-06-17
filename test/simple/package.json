@@ -1,13 +1,13 @@
 {
   "name": "simple",
   "scripts": {
-    "start": "mikrokat serve server.js",
-  	"dev:cloudflare": "wrangler dev",
+    "start": "npx mikrokat serve",
+    "dev:cloudflare": "wrangler dev",
     "dev:fastly": "fastly compute serve",
     "dev:vercel": "vercel dev"
   },
   "dependencies": {
-  	"mikrokat": "link:../..",
+    "mikrokat": "link:../..",
     "@fastly/js-compute": "^3.33.2"
   },
   "type": "module",

@@ -1,5 +1,6 @@
 {
-	"main": ".target/server.cloudflare.js",
-	"build": {
-	}
+  "main": ".target/entrypoint.cloudflare.js",
+  "build": {
+    "command": "TARGET=cloudflare mikrokat build"
+  }
 }

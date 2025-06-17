@@ -10,30 +10,19 @@ let CLOUDFLARE_STUB=`
 import * as mod from "$ENTRYPOINT";
 import {MikrokatServer} from "mikrokat";
 
-let server=new MikrokatServer({mod: mod});
+let serverMap=new Map();
 
-addEventListener("fetch", ev=>{
-	ev.respondWith(server.handleRequest({
-		request: ev.request
-	}));
-});
+export default {
+	async fetch(request, env, ctx) {
+		if (!serverMap.get(env)) {
+			serverMap.set(env,new MikrokatServer({mod: mod, env: env}));
+		}
+
+		let server=serverMap.get(env);
+		return await server.handleRequest({request,ctx});
+	}
+}
 `;
-
-/*
-		let entrypointAbs=path.resolve(entrypoint);
-		let base=entrypointAbs.substr(0,entrypointAbs.lastIndexOf("."));
-		let ext=entrypointAbs.substr(entrypointAbs.lastIndexOf("."));
-		let outfileAbs=base+"."+options.target+ext;
-		if (options.outfile)
-			outfileAbs=path.resolve(options.outfile)
-
-		let stub=fs.readFileSync(path.join(__dirname,"/../stubs/",options.target+".stub.js"),"utf8");
-
-		stub=stub.replaceAll("$ENTRYPOINT","./"+path.relative(path.dirname(outfileAbs),entrypointAbs));
-		fs.writeFileSync(outfileAbs,stub);
-
-		console.log("Wrote: "+outfileAbs)
-*/
 
 export default class CloudflareTarget extends BaseTarget {
 	constructor(arg) {
@@ -41,7 +30,29 @@ export default class CloudflareTarget extends BaseTarget {
 	}
 
 	async build() {
-		let entrypointAbs=await this.cli.getAbsoluteEntrypoint();
-		console.log(entrypointAbs);
+		await this.cli.writeStub(".target/entrypoint.cloudflare.js",CLOUDFLARE_STUB);
+	}
+
+	async init() {
+		await this.cli.updateJsonConfig("wrangler.json",async wrangler=>{
+			if (!wrangler) wrangler={};
+			wrangler.main=".target/entrypoint.cloudflare.js";
+
+			if (!wrangler.build) wrangler.build={};
+			wrangler.build.command="TARGET=cloudflare npx mikrokat build";
+
+			return wrangler;
+		});
+
+		await this.cli.updateLineArrayConfig(".gitignore",async lines=>{
+			if (!lines.includes(".target")) lines.push(".target");
+			if (!lines.includes(".wrangler")) lines.push(".wrangler");
+			return lines;
+		});
+
+		console.log("Cloudflare initialized. Start a dev server with:");
+		console.log();
+		console.log("  wrangler dev");
+		console.log();
 	}
 }
