@@ -4,7 +4,8 @@
     "start": "npx mikrokat serve",
     "dev:cloudflare": "wrangler dev",
     "dev:fastly": "fastly compute serve",
-    "dev:vercel": "vercel dev"
+    "dev:vercel": "vercel dev",
+    "dev:netlify": "TARGET=netlify npx mikrokat build && netlify dev --cwd=."
   },
   "dependencies": {
     "mikrokat": "link:../..",

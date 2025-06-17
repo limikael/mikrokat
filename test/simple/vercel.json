@@ -1,9 +1,9 @@
 {
-  "buildCommand": "mikrokat build --target=vercel --outfile=api/index.js server.js",
+  "buildCommand": "TARGET=vercel npx mikrokat build",
   "routes": [
     {
       "src": "/.*",
-      "dest": "api/index.js"
+      "dest": "api/entrypoint.vercel.js"
     }
   ]
 }

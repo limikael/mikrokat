@@ -1,3 +1,6 @@
 .vercel
 .target
 node_modules
+api
+.netlify
+netlify
