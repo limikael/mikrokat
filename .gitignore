@@ -9,3 +9,4 @@ yarn.lock
 .netlify
 .target
 .wrangler
+spec/tmp
