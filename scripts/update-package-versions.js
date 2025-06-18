@@ -13,7 +13,7 @@ for (let packageName of packageNames) {
 	packageVersions[packageName]=latestVersion;
 }
 
-await fsp.writeFile("src/main/package-versions.js",`
+await fsp.writeFile("src/cli/package-versions.js",`
 export default ${JSON.stringify(packageVersions,null,2)};
 `);
 

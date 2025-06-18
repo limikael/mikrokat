@@ -1,5 +1,5 @@
 import BaseTarget from "./BaseTarget.js";
-import packageVersions from "../main/package-versions.js";
+import packageVersions from "../cli/package-versions.js";
 import {Section} from '@ltd/j-toml';
 
 let NETLIFY_STUB=`
