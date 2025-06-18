@@ -1,0 +1,8 @@
+{
+	"services": {
+		"DB": {
+			"type": "sqlite",
+			"filename": "test.sqlite"
+		}
+	}
+}

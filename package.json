@@ -20,6 +20,7 @@
     "serve-fetch": "^1.0.4"
   },
   "devDependencies": {
-    "jasmine": "^5.8.0"
+    "jasmine": "^5.8.0",
+    "better-sqlite3": "^11.10.0"
   }
 }

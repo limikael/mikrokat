@@ -9,6 +9,8 @@ import targetClasses from "../targets/target-classes.js";
 import fs, {promises as fsp} from "fs";
 import {fileURLToPath} from 'url';
 import * as TOML from '@ltd/j-toml';
+import {getServiceTypes} from "../services/service-util.js";
+import serviceFiles from "../services/service-files.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -55,6 +57,19 @@ export default class MikrokatCli {
 		return path.dirname(packageInfo.path);
 	}
 
+	async getConfig() {
+		let cwd=await this.getEffectiveCwd();
+		let config={};
+
+		if (fs.existsSync(path.join(cwd,"mikrokat.json")))
+			config={...config,...JSON.parse(await fsp.readFile(path.join(cwd,"mikrokat.json")))}
+
+		if (!config.services)
+			config.services={};
+
+		return config;
+	}
+
 	async getAbsoluteEntrypoint() {
 		if (this.options.entrypoint)
 			return path.resolve(this.options.cwd,this.options.entrypoint);
@@ -79,13 +94,26 @@ export default class MikrokatCli {
 	}
 
 	async serve() {
+		let config=await this.getConfig();
+		let serviceTypes=getServiceTypes(config.services);
+		let serviceClasses={};
+
+		for (let serviceType of serviceTypes) {
+			let serviceImport=path.join(__dirname,"../services/",serviceFiles[serviceType])
+			serviceClasses[serviceType]=(await import(serviceImport)).default;
+		}
+
 		let mod=await import(await this.getAbsoluteEntrypoint());
-		let server=new MikrokatServer({mod});
+		let server=new MikrokatServer({mod, services: config.services, serviceClasses});
 		let listener=createNodeRequestListener(request=>server.handleRequest({request}));
 		let httpServer=http.createServer(listener);
-		httpServer.listen(this.options.port,err=>{
-			console.log("Listening to port: "+this.options.port);
-		});
+
+		await new Promise((resolve, reject)=>{
+			httpServer.listen(this.options.port,err=>{
+				console.log("Listening to port: "+this.options.port);
+				resolve();
+			});
+		})
 	}
 
 	async build() {
