@@ -1,4 +1,5 @@
 import * as resolve from 'resolve.exports';
+import {responseAssert} from "./js-util.js";
 
 export function safeResolveExports(...args) {
 	try {
@@ -45,4 +46,13 @@ export function pkgSetExport(pkg, {importPath, conditions, target}={}) {
 
 	exps.default[importPath]=target;
 	return pkg;
+}
+
+export async function getPackageInfo(pkgName) {
+	let url=new URL("https://registry.npmjs.com/"+pkgName);
+	let response=await fetch(url);
+	await responseAssert(response);
+
+	let result=await response.json();
+	return result;
 }

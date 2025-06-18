@@ -5,6 +5,7 @@ test/**/bin
 test/**/pkg
 test/*/api
 yarn.lock
-
 # Local Netlify folder
 .netlify
+.target
+.wrangler

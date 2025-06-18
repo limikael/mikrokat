@@ -1,0 +1,6 @@
+
+name = 'project'
+language = 'javascript'
+
+[scripts]
+build = 'TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm'

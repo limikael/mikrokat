@@ -1,4 +1,5 @@
 import BaseTarget from "./BaseTarget.js";
+import packageVersions from "../main/package-versions.js";
 
 let CLOUDFLARE_STUB=`
 //
@@ -34,25 +35,37 @@ export default class CloudflareTarget extends BaseTarget {
 	}
 
 	async init() {
-		await this.cli.updateJsonConfig("wrangler.json",async wrangler=>{
+		await this.cli.processProjectFile("package.json","json",async pkg=>{
+			if (!pkg.scripts) pkg.scripts={};
+			if (!pkg.scripts["dev:cloudflare"])
+				pkg.scripts["dev:cloudflare"]="wrangler dev";
+
+			if (!pkg.dependencies) pkg.dependencies={};
+			pkg.dependencies.wrangler="^"+packageVersions.wrangler;
+		});
+
+		await this.cli.processProjectFile("wrangler.json","json",async wrangler=>{
 			if (!wrangler) wrangler={};
 			wrangler.main=".target/entrypoint.cloudflare.js";
 
 			if (!wrangler.build) wrangler.build={};
-			wrangler.build.command="TARGET=cloudflare npx mikrokat build";
+			wrangler.build.command="TARGET=cloudflare npm run build";
 
 			return wrangler;
 		});
 
-		await this.cli.updateLineArrayConfig(".gitignore",async lines=>{
-			if (!lines.includes(".target")) lines.push(".target");
-			if (!lines.includes(".wrangler")) lines.push(".wrangler");
-			return lines;
+		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+			if (!ignore.includes(".target")) ignore.push(".target");
+			if (!ignore.includes(".wrangler")) ignore.push(".wrangler");
 		});
 
-		console.log("Cloudflare initialized. Start a dev server with:");
-		console.log();
-		console.log("  wrangler dev");
-		console.log();
+		this.cli.log("Cloudflare initialized. Start a dev server with:");
+		this.cli.log();
+		this.cli.log("  npm run dev:cloudflare");
+		this.cli.log();
+		this.cli.log("Deploy with:");
+		this.cli.log();
+		this.cli.log("  npm run deploy:cloudflare");
+		this.cli.log();
 	}
 }

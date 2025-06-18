@@ -1,4 +1,6 @@
 import BaseTarget from "./BaseTarget.js";
+import {Section} from '@ltd/j-toml';
+import packageVersions from "../main/package-versions.js";
 
 let FASTLY_STUB=`
 //
@@ -37,24 +39,39 @@ export default class FastlyTarget extends BaseTarget {
 	}
 
 	async init() {
-		let name;
-		await this.cli.updateJsonConfig("package.json",async pkg=>{
-			name=pkg.name;
-			return pkg;
+		await this.cli.processProjectFile("package.json","json",async pkg=>{
+			if (!pkg.scripts) pkg.scripts={};
+			if (!pkg.scripts["dev:fastly"])
+				pkg.scripts["dev:fastly"]="fastly compute serve";
+
+			if (!pkg.dependencies) pkg.dependencies={};
+			pkg.dependencies["@fastly/cli"]="^"+packageVersions["@fastly/cli"];
+			pkg.dependencies["@fastly/js-compute"]="^"+packageVersions["@fastly/js-compute"];
 		});
 
-		let stub=FASTLY_TOML_STUB.replaceAll("$NAME",name);
-		await this.cli.initFile("fastly.toml",stub);
+		let pkg=await this.cli.processProjectFile("package.json","json");
 
-		await this.cli.updateLineArrayConfig(".gitignore",async lines=>{
-			if (!lines.includes("bin")) lines.push("bin");
-			if (!lines.includes("pkg")) lines.push("pkg");
-			return lines;
+		await this.cli.processProjectFile("fastly.toml","toml",async fastly=>{
+			if (!fastly)
+				fastly={};
+
+			fastly.name=pkg.name;
+			fastly.language="javascript";
+
+			if (!fastly.scripts) fastly.scripts=Section({});
+			fastly.scripts.build="TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
+
+			return fastly;
 		});
 
-		console.log("Fastly initialized. Start a dev server with:");
-		console.log();
-		console.log("  fastly compute serve");
-		console.log();
+		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+			if (!ignore.includes("bin")) ignore.push("bin");
+			if (!ignore.includes("pkg")) ignore.push("pkg");
+		});
+
+		this.cli.log("Fastly initialized. Start a dev server with:");
+		this.cli.log();
+		this.cli.log("  npm run dev:fastly");
+		this.cli.log();
 	}
 }

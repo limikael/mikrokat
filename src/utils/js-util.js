@@ -4,3 +4,13 @@ export class DeclaredError extends Error {
 		this.declared=true;
 	}
 }
+
+export async function responseAssert(response) {
+	if (response.status>=200 && response.status<300)
+		return;
+
+	let e=new Error(await response.text());
+	e.status=response.status;
+
+	throw e;
+}

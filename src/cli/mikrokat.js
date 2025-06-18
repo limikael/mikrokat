@@ -14,6 +14,17 @@ program.name("mikrokat")
 	.description("Multi provider edge mikro framework.")
 	.passThroughOptions()
 	.option("--cwd <cwd>","Run as if started from this dir",process.cwd())
+	.option("--version","Print version")
+	.action(async options=>{
+		if (options.version) {
+			let cli=new MikrokatCli({program, options});
+			console.log(cli.getVersion());
+		}
+
+		else {
+			program.outputHelp();
+		}
+	});
 
 program.command("serve")
 	.alias("dev")

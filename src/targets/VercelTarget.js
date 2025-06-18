@@ -1,4 +1,5 @@
 import BaseTarget from "./BaseTarget.js";
+import packageVersions from "../main/package-versions.js";
 
 let VERCEL_STUB=`
 import * as mod from "$ENTRYPOINT";
@@ -17,20 +18,30 @@ export default async function handler(req) {
 }
 `;
 
-export default class CloudflareTarget extends BaseTarget {
+export default class VercelTarget extends BaseTarget {
 	constructor(arg) {
 		super(arg);
 	}
 
 	async build() {
-		await this.cli.initFile("public/.keep","");
 		await this.cli.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
 	}
 
 	async init() {
-		await this.cli.updateJsonConfig("vercel.json",async vercel=>{
+		await this.cli.processProjectFile("package.json","json",async pkg=>{
+			if (!pkg.scripts) pkg.scripts={};
+			if (!pkg.scripts["dev:vercel"])
+				pkg.scripts["dev:vercel"]="TARGET=vercel npm run build && vercel dev";
+
+			if (!pkg.dependencies) pkg.dependencies={};
+			pkg.dependencies["vercel"]="^"+packageVersions["vercel"];
+		});
+
+		await this.cli.processProjectFile("vercel.json","json",async vercel=>{
 			if (!vercel) vercel={};
-			vercel.buildCommand="TARGET=vercel npx mikrokat build";
+
+			//vercel.buildCommand="TARGET=vercel mikrokat build";
+			vercel.buildCommand="";
 
 			if (!vercel.routes) {
 				vercel.routes=[
@@ -44,17 +55,14 @@ export default class CloudflareTarget extends BaseTarget {
 			return vercel;
 		});
 
-		await this.cli.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
-
-		await this.cli.updateLineArrayConfig(".gitignore",async lines=>{
-			if (!lines.includes(".vercel")) lines.push(".vercel");
-			if (!lines.includes("api")) lines.push("api");
-			return lines;
+		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+			if (!ignore.includes(".vercel")) ignore.push(".vercel");
+			if (!ignore.includes("api")) ignore.push("api");
 		});
 
-		console.log("Vercel initialized. Start a dev server with:");
-		console.log();
-		console.log("  vercel dev");
-		console.log();
+		this.cli.log("Vercel initialized. Start a dev server with:");
+		this.cli.log();
+		this.cli.log("  npm run dev:vercel");
+		this.cli.log();
 	}
 }
