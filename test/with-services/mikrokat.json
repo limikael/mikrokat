@@ -11,6 +11,16 @@
         "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
         "if": {"target": "netlify"}
       },
+      {
+        "type": "neon",
+        "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
+        "if": {"target": "vercel"}
+      },
+      {
+        "type": "neon",
+        "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
+        "if": {"target": "fastly"}
+      },
     ],
     "NEON": {
       "type": "neon",

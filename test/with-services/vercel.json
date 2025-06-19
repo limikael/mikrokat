@@ -1,0 +1,9 @@
+{
+  "buildCommand": "",
+  "routes": [
+    {
+      "src": "/.*",
+      "dest": "api/entrypoint.vercel.js"
+    }
+  ]
+}

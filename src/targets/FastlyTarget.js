@@ -12,7 +12,16 @@ let FASTLY_STUB=`
 import * as mod from "$ENTRYPOINT";
 import {MikrokatServer} from "mikrokat";
 
-let server=new MikrokatServer({mod: mod});
+$SERVICEIMPORTS
+let serviceClasses=$SERVICECLASSES;
+let services=$SERVICES;
+
+let server=new MikrokatServer({
+	target: "fastly",
+	mod, 
+	serviceClasses,
+	services
+});
 
 addEventListener("fetch", ev=>{
 	ev.respondWith(server.handleRequest({

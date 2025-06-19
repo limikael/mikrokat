@@ -5,17 +5,26 @@ let VERCEL_STUB=`
 import * as mod from "$ENTRYPOINT";
 import {MikrokatServer} from "mikrokat";
 
+$SERVICEIMPORTS
+let serviceClasses=$SERVICECLASSES;
+let services=$SERVICES;
+
+let server=new MikrokatServer({
+	target: "vercel",
+	mod, 
+	serviceClasses,
+	services
+});
+
+export default async function handler(request) {
+	return await server.handleRequest({
+		request: request
+	});
+}
+
 export const config = {
 	runtime: 'edge',
 };
-
-let server=new MikrokatServer({mod: mod});
-
-export default async function handler(req) {
-	return await server.handleRequest({
-		request: req
-	});
-}
 `;
 
 export default class VercelTarget extends BaseTarget {
