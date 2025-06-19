@@ -30,14 +30,6 @@ addEventListener("fetch", ev=>{
 });
 `;
 
-let FASTLY_TOML_STUB=`
-name="$NAME"
-language="javascript"
-
-[scripts]
-  build="TARGET=fastly npx mikrokat build && npx js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
-`
-
 export default class FastlyTarget extends BaseTarget {
 	constructor(arg) {
 		super(arg);
@@ -53,6 +45,9 @@ export default class FastlyTarget extends BaseTarget {
 			if (!pkg.scripts["dev:fastly"])
 				pkg.scripts["dev:fastly"]="fastly compute serve";
 
+			if (!pkg.scripts["deploy:fastly"])
+				pkg.scripts["deploy:fastly"]="fastly compute publish";
+
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies["@fastly/cli"]="^"+packageVersions["@fastly/cli"];
 			pkg.dependencies["@fastly/js-compute"]="^"+packageVersions["@fastly/js-compute"];
@@ -66,6 +61,9 @@ export default class FastlyTarget extends BaseTarget {
 
 			fastly.name=pkg.name;
 			fastly.language="javascript";
+
+			if (!fastly.manifest_version)
+				fastly.manifest_version=3;
 
 			if (!fastly.scripts) fastly.scripts=Section({});
 			fastly.scripts.build="TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
@@ -81,6 +79,10 @@ export default class FastlyTarget extends BaseTarget {
 		this.cli.log("Fastly initialized. Start a dev server with:");
 		this.cli.log();
 		this.cli.log("  npm run dev:fastly");
+		this.cli.log();
+		this.cli.log("Deploy with:");
+		this.cli.log();
+		this.cli.log("  npm run deploy:fastly");
 		this.cli.log();
 	}
 }
