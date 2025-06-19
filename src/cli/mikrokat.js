@@ -29,7 +29,7 @@ program.name("mikrokat")
 program.command("serve")
 	.alias("dev")
 	.description("Serve from this machine.")
-	.option("--entrypoint <entrypoint>","Server entrypoint.")
+	.option("--main <entrypoint>","Server entrypoint.")
 	.addOption(new Option("--port <port>","Listening port.").default(3000).env("PORT"))
 	.action(async options=>{
 		await new MikrokatCli({program, options}).serve();
@@ -37,7 +37,7 @@ program.command("serve")
 
 program.command("build")
 	.description("Build entrypoint stub for provider.")
-	.option("--entrypoint <entrypoint>","Server entrypoint.")
+	.option("--main <entrypoint>","Server entrypoint.")
 	.addOption(new Option("--target <provider>","Provider to build for.").choices(Object.keys(targetClasses)).env("TARGET"))
 	.action(async options=>{
 		await new MikrokatCli({program, options}).build();

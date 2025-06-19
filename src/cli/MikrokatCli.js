@@ -107,15 +107,16 @@ export default class MikrokatCli {
 	}
 
 	async getAbsoluteEntrypoint() {
-		if (this.options.entrypoint)
-			return path.resolve(this.options.cwd,this.options.entrypoint);
+		if (this.options.main)
+			return path.resolve(this.options.cwd,this.options.main);
+
+		let config=await this.getConfig();
+		if (!config.main)
+			throw new DeclaredError("No entrypoint. Pass it on the command line using --main, or put it in mikrokat.json");
 
 		let pkgInfo=await this.getPackageInfo();
-		let res=safeResolveExports(pkgInfo.packageJson,"./entrypoint");
-		if (!res || !res.length)
-			throw new DeclaredError("No entrypoint.");
 
-		return path.resolve(path.dirname(pkgInfo.path),res[0]);
+		return path.resolve(path.dirname(pkgInfo.path),config.main);
 	}
 
 	async writeStub(outfile, content) {
@@ -177,7 +178,10 @@ export default class MikrokatCli {
 
 		await new Promise((resolve, reject)=>{
 			httpServer.listen(this.options.port,err=>{
-				console.log("Listening to port: "+this.options.port);
+				if (err)
+					reject(err);
+
+				this.log("Listening to port: "+this.options.port);
 				resolve();
 			});
 		})
@@ -220,14 +224,20 @@ export default class MikrokatCli {
 			if (!pkg.dependencies.mikrokat)
 				pkg.dependencies.mikrokat="^"+await this.getProgramVersion();
 
-			if (!safeResolveExports(pkg,"./entrypoint")) {
-				pkgSetExport(pkg,{
-					importPath: "./entrypoint",
-					target: "./src/main/server.js"
-				});
-			}
-
 			return pkg;
+		});
+
+		await this.processProjectFile("mikrokat.json","json",async mikrokat=>{
+			if (!mikrokat)
+				mikrokat={};
+
+			if (!mikrokat.main)
+				mikrokat.main="src/main/server.js";
+
+			if (!mikrokat.services)
+				mikrokat.services={};
+
+			return mikrokat;
 		});
 
 		await this.processProjectFile(await this.getAbsoluteEntrypoint(),null,content=>{

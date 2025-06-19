@@ -21,19 +21,16 @@ describe("MikrokatCli",()=>{
 		await fsp.rm(projectDir,{force:true, recursive: true});
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
-		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
-			services: {
-				DB: "hello"
-			}
-		}));
 
 		let cli=new MikrokatCli({options: {cwd: projectDir}});
 		expect(await cli.getEffectiveCwd()).toEqual(projectDir);
 
-		//console.log(await cli.getConfig());
-		expect(await cli.getConfig()).toEqual({ services: { DB: 'hello' } });
-
 		await cli.init();
+
+		expect(await cli.getConfig()).toEqual({
+			main: "src/main/server.js",
+			services: {}
+		});
 
 		expect(fs.existsSync(path.join(projectDir,"src/main/server.js"))).toBeTrue();
 		expect(await fsp.readFile(path.join(projectDir,".gitignore"),"utf8")).toEqual(".target\nnode_modules\n");
@@ -74,11 +71,12 @@ describe("MikrokatCli",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000}});
+		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
 		await cli.init();
 
 		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
 			{
+				"main": "src/main/server.js",
 				"services": {
 					"DB": {
 						"type": "sqlite",
@@ -117,6 +115,5 @@ describe("MikrokatCli",()=>{
 		let responseBody=await response.text();
 
 		expect(responseBody).toEqual(`[{"val":123}]`);
-
 	});
 })
