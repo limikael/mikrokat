@@ -45,10 +45,13 @@ export default class CloudflareTarget extends BaseTarget {
 	}
 
 	async init() {
-		await this.cli.processProjectFile("package.json","json",async pkg=>{
+		let pkg=await this.cli.processProjectFile("package.json","json",async pkg=>{
 			if (!pkg.scripts) pkg.scripts={};
 			if (!pkg.scripts["dev:cloudflare"])
 				pkg.scripts["dev:cloudflare"]="wrangler dev";
+
+			if (!pkg.scripts["deploy:cloudflare"])
+				pkg.scripts["deploy:cloudflare"]="wrangler deploy";
 
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies.wrangler="^"+packageVersions.wrangler;
@@ -58,8 +61,14 @@ export default class CloudflareTarget extends BaseTarget {
 			if (!wrangler) wrangler={};
 			wrangler.main=".target/entrypoint.cloudflare.js";
 
+			if (!wrangler.name)
+				wrangler.name=pkg.name;
+
 			if (!wrangler.build) wrangler.build={};
 			wrangler.build.command="TARGET=cloudflare npm run build";
+
+			if (!wrangler.compatibility_date)
+				wrangler.compatibility_date=new Date().toISOString().slice(0, 10);
 
 			return wrangler;
 		});
