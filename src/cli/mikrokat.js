@@ -18,7 +18,7 @@ program.name("mikrokat")
 	.action(async options=>{
 		if (options.version) {
 			let cli=new MikrokatCli({program, options});
-			console.log(cli.getVersion());
+			console.log(await cli.getProgramVersion());
 		}
 
 		else {

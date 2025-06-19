@@ -18,8 +18,6 @@ export default class MikrokatServer {
 	}
 
 	handleRequest=async ({request, ctx})=>{
-		console.log("handling request...");
-
 		let ev={
 			app: this,
 			request: request,
