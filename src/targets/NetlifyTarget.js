@@ -12,7 +12,16 @@ let NETLIFY_STUB=`
 import * as mod from "$ENTRYPOINT";
 import {MikrokatServer} from "mikrokat";
 
-let server=new MikrokatServer({mod: mod});
+$SERVICEIMPORTS
+let serviceClasses=$SERVICECLASSES;
+let services=$SERVICES;
+
+let server=new MikrokatServer({
+	target: "netlify",
+	mod, 
+	serviceClasses,
+	services
+});
 
 export default async function(request) {
 	return await server.handleRequest({

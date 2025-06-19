@@ -11,6 +11,7 @@ import {fileURLToPath} from 'url';
 import * as TOML from '@ltd/j-toml';
 import {getServiceTypes} from "../services/service-util.js";
 import serviceFiles from "../services/service-files.js";
+import JSON5 from "json5";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -27,6 +28,9 @@ export default class MikrokatCli {
 			this.options={...this.options,...program.opts()};
 
 		this.options={...this.options,...options};
+
+		if (!this.options.target)
+			this.options.target="node";
 	}
 
 	log(...args) {
@@ -57,12 +61,44 @@ export default class MikrokatCli {
 		return path.dirname(packageInfo.path);
 	}
 
+	matchServiceIf(clause) {
+		if (!clause)
+			return true;
+
+		if (clause.target &&
+				clause.target!=this.options.target)
+			return false;
+
+		return true;
+	}
+
+	async getApplicableServices() {
+		let resultServices={};
+		let declaredServices=(await this.getConfig()).services;
+
+		for (let k in declaredServices) {
+			if (Array.isArray(declaredServices[k])) {
+				let cands=declaredServices[k];
+				let useCand=cands.find(c=>this.matchServiceIf(c.if));
+				if (useCand)
+					resultServices[k]=useCand;
+			}
+
+			else {
+				if (this.matchServiceIf(declaredServices[k].if))
+					resultServices[k]=declaredServices[k];
+			}
+		}
+
+		return resultServices;
+	}
+
 	async getConfig() {
 		let cwd=await this.getEffectiveCwd();
 		let config={};
 
 		if (fs.existsSync(path.join(cwd,"mikrokat.json")))
-			config={...config,...JSON.parse(await fsp.readFile(path.join(cwd,"mikrokat.json")))}
+			config={...config,...JSON5.parse(await fsp.readFile(path.join(cwd,"mikrokat.json")))}
 
 		if (!config.services)
 			config.services={};
@@ -83,11 +119,32 @@ export default class MikrokatCli {
 	}
 
 	async writeStub(outfile, content) {
+		let config=await this.getConfig();
 		let cwd=await this.getEffectiveCwd();
 		let entrypointAbs=await this.getAbsoluteEntrypoint();
 		let outfileAbs=path.resolve(cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
+		let applicableServices=await this.getApplicableServices();
+		let serviceImports="";
+		let serviceClasses="{\n";
+		let serviceTypes=getServiceTypes(applicableServices);
+
+		for (let serviceType of serviceTypes) {
+			if (!serviceFiles[serviceType])
+				throw new DeclaredError("Unknown service type: "+serviceType);
+
+			let servicePathAbs=path.join(__dirname,"../services/",serviceFiles[serviceType]);
+			let servicePathRel=path.relative(path.dirname(outfileAbs),servicePathAbs);
+			serviceImports+=`import Service_${serviceType} from ${JSON.stringify(servicePathRel)};\n`;
+			serviceClasses+=`\"${serviceType}\": Service_${serviceType},\n`;
+		}
+
+		serviceClasses+="}\n";
+
+		content=content.replaceAll("$SERVICES",JSON.stringify(applicableServices,null,2));
+		content=content.replaceAll("$SERVICECLASSES",serviceClasses);
+		content=content.replaceAll("$SERVICEIMPORTS",serviceImports);
 		content=content.replaceAll("$ENTRYPOINT",path.relative(path.dirname(outfileAbs),entrypointAbs));
 
 		await fsp.writeFile(outfileAbs,content);
@@ -95,16 +152,26 @@ export default class MikrokatCli {
 
 	async serve() {
 		let config=await this.getConfig();
-		let serviceTypes=getServiceTypes(config.services);
+		let applicableServices=await this.getApplicableServices();
+		let serviceTypes=getServiceTypes(applicableServices);
 		let serviceClasses={};
 
 		for (let serviceType of serviceTypes) {
+			if (!serviceFiles[serviceType])
+				throw new DeclaredError("Unknown service type: "+serviceType);
+
 			let serviceImport=path.join(__dirname,"../services/",serviceFiles[serviceType])
 			serviceClasses[serviceType]=(await import(serviceImport)).default;
 		}
 
 		let mod=await import(await this.getAbsoluteEntrypoint());
-		let server=new MikrokatServer({mod, services: config.services, serviceClasses});
+		let server=new MikrokatServer({
+			target: "node",
+			cwd: await this.getEffectiveCwd(),
+			mod: mod,
+			services: applicableServices,
+			serviceClasses
+		});
 		let listener=createNodeRequestListener(request=>server.handleRequest({request}));
 		let httpServer=http.createServer(listener);
 
@@ -117,6 +184,9 @@ export default class MikrokatCli {
 	}
 
 	async build() {
+		if (this.options.target=="node")
+			throw new Error("Node doesn't need building");
+
 		let target=new targetClasses[this.options.target]({cli: this});
 
 		await target.build();
@@ -170,7 +240,7 @@ export default class MikrokatCli {
 			if (!ignore.includes("node_modules")) ignore.push("node_modules");
 		});
 
-		if (this.options.target) {
+		if (this.options.target && this.options.target!="node") {
 			let target=new targetClasses[this.options.target]({cli: this});
 			await target.init();
 		}
@@ -213,9 +283,6 @@ export default class MikrokatCli {
 				});
 				break;
 		}
-
-		/*if (format=="toml")
-			console.log(textContent);*/
 
 		await fsp.mkdir(path.dirname(filenameAbs),{recursive: true});
 		await fsp.writeFile(filenameAbs,textContent);

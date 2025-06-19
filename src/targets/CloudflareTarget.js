@@ -11,12 +11,22 @@ let CLOUDFLARE_STUB=`
 import * as mod from "$ENTRYPOINT";
 import {MikrokatServer} from "mikrokat";
 
+$SERVICEIMPORTS
+
+let serviceClasses=$SERVICECLASSES;
+let services=$SERVICES;
 let serverMap=new Map();
 
 export default {
 	async fetch(request, env, ctx) {
 		if (!serverMap.get(env)) {
-			serverMap.set(env,new MikrokatServer({mod: mod, env: env}));
+			serverMap.set(env,new MikrokatServer({
+				target: "cloudflare",
+				mod, 
+				env,
+				serviceClasses,
+				services
+			}));
 		}
 
 		let server=serverMap.get(env);

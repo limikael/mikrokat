@@ -1,3 +1,4 @@
 export default {
-	"sqlite": "SqliteService.js"
+	"sqlite": "SqliteService.js",
+	"neon": "NeonService.js"
 };

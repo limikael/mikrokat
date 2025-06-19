@@ -39,6 +39,34 @@ describe("MikrokatCli",()=>{
 		expect(await fsp.readFile(path.join(projectDir,".gitignore"),"utf8")).toEqual(".target\nnode_modules\n");
 	});
 
+	it("can compute applicable services",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
+			services: {
+				DB1: {type: "database"},
+				DB2: {type: "database", if: {target: "hello"}},
+				DB3: {type: "database", if: {target: "some other target"}},
+				DB4: [
+					{type: "database", if: {target: "not this one"}},
+					{type: "database", if: {target: "hello"}},
+				]
+			}
+		}));
+
+		let cli=new MikrokatCli({options: {cwd: projectDir, target: "hello"}});
+		expect(await cli.getApplicableServices()).toEqual({
+			DB1: { type: 'database' },
+			DB2: { type: 'database', if: { target: 'hello' } },
+			DB4: { type: 'database', if: { target: 'hello' } }
+		});
+
+		//console.log(await cli.getApplicableServices());
+	});
+
 	it("can reply to a request",async ()=>{
 		let projectDir=path.join(__dirname,"../tmp/project");
 
@@ -55,14 +83,31 @@ describe("MikrokatCli",()=>{
 					"DB": {
 						"type": "sqlite",
 						"filename": "test.sqlite"
-					}
+					},
+					"DB2": [
+						{
+							"target": "hello",
+							"type": "sqlite",
+							"filename": "test.sqlite"
+						},
+						{
+							"type": "sqlite",
+							"filename": "test2.sqlite"
+						}
+					]
 				}
 			}
 		`);
 
 		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
 			export async function onFetch({request, env}) {
-				return new Response("Testing: "+env.DB.test());
+				let res=await (await env.DB.prepare("CREATE TABLE test (val initeger)")).run([]);
+				let res2=await (await env.DB.prepare("INSERT INTO test (val) VALUES (123)")).run([]);
+				let res3=await (await env.DB.prepare("SELECT * FROM test")).all([]);
+
+				let res4=await (await env.DB2.prepare("CREATE TABLE test2 (val initeger)")).run([]);
+
+				return Response.json(res3.results);
 			}
 		`);
 
@@ -71,7 +116,7 @@ describe("MikrokatCli",()=>{
 		let response=await fetch("http://localhost:3000");
 		let responseBody=await response.text();
 
-		expect(responseBody).toEqual("Testing: test");
+		expect(responseBody).toEqual(`[{"val":123}]`);
 
 	});
 })

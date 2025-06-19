@@ -1,0 +1,13 @@
+{
+  "main": ".target/entrypoint.cloudflare.js",
+  "build": {
+    "command": "TARGET=cloudflare npm run build"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+  	  "database_name": "mydb",
+  	  "database_id": "myid"
+    }
+  ]
+}

@@ -15,12 +15,14 @@
   "dependencies": {
     "@ltd/j-toml": "^1.38.0",
     "commander": "^14.0.0",
+    "json5": "^2.2.3",
     "read-package-up": "^11.0.0",
     "resolve.exports": "^2.0.3",
     "serve-fetch": "^1.0.4"
   },
   "devDependencies": {
-    "jasmine": "^5.8.0",
-    "better-sqlite3": "^11.10.0"
+    "@neondatabase/serverless": "^1.0.1",
+    "better-sqlite3": "^11.10.0",
+    "jasmine": "^5.8.0"
   }
 }
