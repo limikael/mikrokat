@@ -17,8 +17,5 @@
     "vercel": "^43.2.0",
     "@fastly/cli": "^11.3.0",
     "@fastly/js-compute": "^3.34.0"
-  },
-  "exports": {
-    "./entrypoint": "./src/main/server.js"
   }
 }

@@ -1,4 +1,5 @@
 {
+  "main": "src/main/server.js",
   "services": {
     "DB": [
       {
