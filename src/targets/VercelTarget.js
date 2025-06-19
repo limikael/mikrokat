@@ -42,6 +42,9 @@ export default class VercelTarget extends BaseTarget {
 			if (!pkg.scripts["dev:vercel"])
 				pkg.scripts["dev:vercel"]="TARGET=vercel npm run build && vercel dev";
 
+			if (!pkg.scripts["deploy:vercel"])
+				pkg.scripts["deploy:vercel"]="TARGET=vercel npm run build && vercel deploy";
+
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies["vercel"]="^"+packageVersions["vercel"];
 		});
@@ -72,6 +75,10 @@ export default class VercelTarget extends BaseTarget {
 		this.cli.log("Vercel initialized. Start a dev server with:");
 		this.cli.log();
 		this.cli.log("  npm run dev:vercel");
+		this.cli.log();
+		this.cli.log("Deploy with:");
+		this.cli.log();
+		this.cli.log("  npm run deploy:vercel");
 		this.cli.log();
 	}
 }
