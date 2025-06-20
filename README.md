@@ -117,6 +117,12 @@ export function onFetch({env}) {
 }
 ```
 
+It is noteworthy that while there exist clear classes of services, such as SQL database, AI completion, etc, each vendor has their own API when accessing these
+services, often with subtle variations which makes it difficult to use one service as a drop-in replacement for another. 
+Mikrokat therefore has a translation layer, so you can access a kind of "least common denominator" for each class of service,
+and wraps the interface of the service to expose its API in a configurable way. This way, you can access a SQL database from Neon using the API for Cloudflare D1,
+or access AI completion services at DeepSeek using the API from OpenAI, without having to change your code. 
+
 This enables writing portable code that integrates with external services (databases, AI, payments, vector search, etc.) without platform-specific boilerplate.
 
 ### Declaring service bindings
