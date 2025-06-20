@@ -154,7 +154,7 @@ Service bindings are declared in the `mikrokat.json` file:
         ],
         "AI": {
             "type": "openai",
-            "apiKey": ....
+            "apiKey": "...."
         }
     }
 }
@@ -162,13 +162,14 @@ Service bindings are declared in the `mikrokat.json` file:
 
 The `services` field of `mikrokat.json` is a dictionary with the binding name of the service as the key. The value is either a single service definition, or an array of service definitions. If an array is used, the first matching service wil be passed to the app.
 
-- `type`: specifies the backend implementation of the service.
-  - Example values: `"sqlite"` (for better-sqlite3), `"neon"` (for Neon serverless Postgres)
+- `type`: specifies the backend implementation of the service.<br/>
+  Example values: `"sqlite"` (for better-sqlite3), `"neon"` (for Neon serverless Postgres)
 
-- `exposeApi`: defines which API style should be exposed to your application code.
-  - This lets you use a consistent API (like D1) across different backends.
-  - Example: `"d1"` to expose a D1-style interface (with `.prepare().all()`, etc.)
+- `exposeApi`: defines which API style should be exposed to your application code.<br/>
+  Mikrokat can translate between different backend implementations and frontend APIs, allowing your code to use a consistent interface
+  regardless of which service is active at runtime. This lets you use a consistent API (like D1) across different backends.<br/>
+  Example: `"d1"` to expose a D1-style interface (with `.prepare().all()`, etc.)
 
-- `if`: optional condition to select this binding for a specific target.
-  - Example: `{ "target": "node" }` to use this only when building for Node
-  - Useful for providing platform-specific service definitions
+- `if`: optional condition to select this binding for a specific target.<br/>
+  Useful for providing platform-specific service definitions.<br/>
+  Example: `{ "target": "node" }` to use this only when building for Node.
