@@ -7,6 +7,7 @@ export default class MikrokatServer {
 		this.cwd=cwd;
 		this.target=target;
 		this.fs=new MiniFs(fileContent);
+		this.appData={};
 
 		if (!this.env)
 			this.env={};
@@ -24,13 +25,30 @@ export default class MikrokatServer {
 		}
 	}
 
-	handleRequest=async ({request, ctx})=>{
-		let ev={
+	createEv() {
+		return ({
 			app: this,
+			env: this.env,
+			fs: this.fs,
+			appData: this.appData
+		});
+	}
+
+	handleStart=async ()=>{
+		if (this.mod.onStart)
+			await this.mod.onStart(this.createEv());
+	}
+
+	handleRequest=async ({request, ctx})=>{
+		if (!this.startPromise)
+			this.startPromise=this.handleStart();
+
+		await this.startPromise;
+
+		let ev={
+			...this.createEv(),
 			request: request,
 			ctx: ctx,
-			env: this.env,
-			fs: this.fs
 		};
 
 		return await this.mod.onFetch(ev);

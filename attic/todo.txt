@@ -1,6 +1,8 @@
 todo:
 
-- onStart function
+x config file system
+x onStart function
+
+- middlewares
 - service binding dependency check
-- config file system
 - static content
