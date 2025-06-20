@@ -1,4 +1,11 @@
-export async function onStart({appData}) {
+async function middleware({request}) {
+	if (new URL(request.url).pathname=="/middleware")
+		return new Response("handled by middleware");
+}
+
+export async function onStart({appData, use}) {
+	use(middleware);
+
 	console.log("starting, init appData")
 	appData.value=123;
 }

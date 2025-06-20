@@ -8,6 +8,7 @@ export default class MikrokatServer {
 		this.target=target;
 		this.fs=new MiniFs(fileContent);
 		this.appData={};
+		this.middlewares=[];
 
 		for (let k in services) {
 			let def=services[k];
@@ -31,12 +32,22 @@ export default class MikrokatServer {
 		});
 	}
 
+	use=async (middleware, options={})=>{
+		this.middlewares.push({...options, middleware});
+	}
+
 	handleStart=async ()=>{
 		if (this.mod.onStart)
-			await this.mod.onStart(this.createEv());
+			await this.mod.onStart({
+				...this.createEv(),
+				use: this.use
+			});
 	}
 
 	handleRequest=async ({request, ctx})=>{
+		if (!request)
+			throw new Error("handleRequest was called without a request!");
+
 		if (!this.startPromise)
 			this.startPromise=this.handleStart();
 
@@ -48,6 +59,22 @@ export default class MikrokatServer {
 			ctx: ctx,
 		};
 
-		return await this.mod.onFetch(ev);
+		let handlers=[
+			...this.middlewares.filter(m=>!m.fallback).map(m=>m.middleware),
+			...this.mod.onFetch?[this.mod.onFetch]:[],
+			...this.middlewares.filter(m=>m.fallback).map(m=>m.middleware)
+		];
+
+		try {
+			for (let handler of handlers) {
+				let response=await handler(ev);
+				if (response)
+					return response;
+			}
+		}
+
+		catch (e) {
+			return new Response(e.message,{status: 500, headers: {"content-type": "text/html"}});
+		}
 	}
 }
