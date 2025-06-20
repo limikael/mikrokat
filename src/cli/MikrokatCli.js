@@ -252,6 +252,10 @@ export default class MikrokatCli {
 			if (!ignore.includes("node_modules")) ignore.push("node_modules");
 		});
 
+		await this.processProjectFile("public/.gitkeep",null,async ()=>{
+			return "";
+		});
+
 		if (this.options.target && this.options.target!="node") {
 			let target=new targetClasses[this.options.target]({cli: this});
 			await target.init();
@@ -280,7 +284,7 @@ export default class MikrokatCli {
 
 		if (processor) {
 			let newContent=await processor(content);
-			if (newContent)
+			if (newContent!==undefined)
 				content=newContent;
 		}
 

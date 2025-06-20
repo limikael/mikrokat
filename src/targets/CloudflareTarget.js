@@ -20,6 +20,13 @@ let serverMap=new Map();
 
 export default {
 	async fetch(request, env, ctx) {
+		if (env.ASSETS && env.ASSETS.fetch) {
+	    	const res = await env.ASSETS.fetch(request);
+	    	if (res && res.status!=404) {
+	    		return res;
+	    	}
+		}
+
 		if (!serverMap.get(env)) {
 			serverMap.set(env,new MikrokatServer({
 				target: "cloudflare",
@@ -71,6 +78,12 @@ export default class CloudflareTarget extends BaseTarget {
 
 			if (!wrangler.compatibility_date)
 				wrangler.compatibility_date=new Date().toISOString().slice(0, 10);
+
+			if (!wrangler.assets)
+				wrangler.assets={};
+
+			if (!wrangler.assets.directory)
+				wrangler.assets.directory="./public";
 
 			return wrangler;
 		});

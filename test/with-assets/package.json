@@ -1,0 +1,15 @@
+{
+  "name": "with-assets",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "mikrokat serve",
+    "build": "mikrokat build",
+    "dev:cloudflare": "wrangler dev",
+    "deploy:cloudflare": "wrangler deploy"
+  },
+  "dependencies": {
+    "mikrokat": "^1.0.6",
+    "wrangler": "^4.20.1"
+  }
+}

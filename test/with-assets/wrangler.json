@@ -1,0 +1,11 @@
+{
+  "main": ".target/entrypoint.cloudflare.js",
+  "name": "with-assets",
+  "build": {
+    "command": "TARGET=cloudflare npm run build"
+  },
+  "compatibility_date": "2025-06-20",
+  "assets": {
+    "directory": "./public"
+  }
+}
