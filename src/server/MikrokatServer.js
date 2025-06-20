@@ -3,14 +3,11 @@ import MiniFs from "../utils/MiniFs.js";
 export default class MikrokatServer {
 	constructor({mod, env, target, cwd, services, serviceClasses, fileContent}) {
 		this.mod=mod;
-		this.env=env;
+		this.env={...env};
 		this.cwd=cwd;
 		this.target=target;
 		this.fs=new MiniFs(fileContent);
 		this.appData={};
-
-		if (!this.env)
-			this.env={};
 
 		for (let k in services) {
 			let def=services[k];
