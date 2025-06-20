@@ -114,7 +114,7 @@ const config = JSON.parse(ev.fs.readFileSync("config.json", "utf-8"));
 
 This allows edge functions to access configuration or data without requiring a traditional file system.
 
-## Bindable Services (WIP)
+## Bindable Services
 
 Bindable services provide a unified interface to external resources like databases, AI models, or payments, allowing your code to stay portable and vendor-agnostic - helping you avoid lock-in to specific platform APIs.
 
