@@ -6,6 +6,7 @@
 * [Mikrokat’s Solution](#mikrokats-solution)
 * [Getting Started](#getting-started)
 * [Writing Your Handler](#writing-your-handler)
+* [Middlewares](#middlewares)
 * [Bindable Services](#bindable-services)
 * [Config Filesystem](#config-filesystem)
 
@@ -126,6 +127,43 @@ The event object received by these function contains the following fields:
 - `fs` - A "mini filesystem" for configuration files. See [Config Filesystem](#config-filesystem).
 - `appData` - An object where you can store runtime info. It is initiated to`{}`, so it is totally up to you what you want to store there.
 - `cron` - The cron expression that triggered a scheduled event. Only sent to the `onSchedule` function.
+
+## Middlewares
+
+Mikrokat supports middleware functions that can intercept and handle incoming requests. Middleware is registered using the `use()` function inside `onStart()`.
+
+A middleware is a function with the same signature as your main handler:
+
+```js
+async function myMiddleware(request, env, ctx) {
+  if (shouldHandle(request)) {
+    return new Response("Handled by middleware");
+  }
+  // Return undefined to fall through
+}
+```
+
+You can register it like this:
+
+```js
+export function onStart({ use }) {
+  use(myMiddleware);
+}
+```
+
+If the middleware returns a `Response`, the request handling stops there. If it returns `undefined` or anything falsy, the next middleware (or main handler) is tried.
+
+### Optional: Run middleware *after* the main handler
+
+By default, middleware runs **before** your main handler. You can also register "fallback" middleware that runs **only if** the main handler (and earlier middleware) did not handle the request:
+
+```js
+export function onStart({ use }) {
+  use(myFallbackMiddleware, { fallback: true });
+}
+```
+
+This is useful for things like custom 404 pages, logging, or handling proxy-style fallthroughs.
 
 ## Bindable Services
 
