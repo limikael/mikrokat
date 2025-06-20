@@ -1,11 +1,12 @@
-//export default class MikrokatServer {}
+import MiniFs from "../utils/MiniFs.js";
 
 export default class MikrokatServer {
-	constructor({mod, env, target, cwd, services, serviceClasses}) {
+	constructor({mod, env, target, cwd, services, serviceClasses, fileContent}) {
 		this.mod=mod;
 		this.env=env;
 		this.cwd=cwd;
 		this.target=target;
+		this.fs=new MiniFs(fileContent);
 
 		if (!this.env)
 			this.env={};
@@ -28,7 +29,8 @@ export default class MikrokatServer {
 			app: this,
 			request: request,
 			ctx: ctx,
-			env: this.env
+			env: this.env,
+			fs: this.fs
 		};
 
 		return await this.mod.onFetch(ev);

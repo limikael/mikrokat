@@ -1,15 +1,7 @@
-# This file describes a Fastly Compute package. To learn more visit:
-# https://www.fastly.com/documentation/reference/compute/fastly-toml
 
-authors = []
-description = ""
-language = "javascript"
-manifest_version = 3
-name = "fastly-simple"
-service_id = "5GSPb7qHPAsyDyYGUjyHC1"
-
-[local_server]
+name = 'simple'
+language = 'javascript'
+manifest_version = 3.0
 
 [scripts]
-  build = "TARGET=fastly npx mikrokat build && npx js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
-  post_init = "npm install"
+build = 'TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm'

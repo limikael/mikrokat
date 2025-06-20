@@ -70,6 +70,7 @@ describe("MikrokatCli",()=>{
 		await fsp.rm(projectDir,{force:true, recursive: true});
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
 
 		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
 		await cli.init();
@@ -77,6 +78,7 @@ describe("MikrokatCli",()=>{
 		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
 			{
 				"main": "src/main/server.js",
+				"files": "myfile.txt",
 				"services": {
 					"DB": {
 						"type": "sqlite",
@@ -101,14 +103,16 @@ describe("MikrokatCli",()=>{
 		`);
 
 		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
-			export async function onFetch({request, env}) {
+			export async function onFetch({request, env, fs}) {
 				let res=await env.DB.prepare("CREATE TABLE test (val initeger)").run();
 				let res2=await env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
 				let res3=await env.DB.prepare("SELECT * FROM test").all();
 
 				let res4=await env.DB2.prepare("CREATE TABLE test2 (val initeger)").run();
 
-				return Response.json(res3.results);
+				let txt=JSON.stringify(res3.results)+fs.readFileSync("myfile.txt");
+
+				return new Response(txt);
 			}
 		`);
 
@@ -117,6 +121,27 @@ describe("MikrokatCli",()=>{
 		let response=await fetch("http://localhost:3000");
 		let responseBody=await response.text();
 
-		expect(responseBody).toEqual(`[{"val":123}]`);
+		expect(responseBody).toEqual(`[{"val":123}]hello world`);
+	});
+
+	it("can read file content",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
+
+		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
+		await cli.init();
+
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
+			{
+				"files": ["myfile.txt"],
+			}
+		`);
+
+		let fileContent=await cli.getFileContent();
+		expect(fileContent).toEqual({"myfile.txt":"hello world"});
 	});
 })

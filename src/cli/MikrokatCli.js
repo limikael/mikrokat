@@ -2,7 +2,7 @@ import MikrokatServer from "../server/MikrokatServer.js";
 import {createNodeRequestListener} from "serve-fetch";
 import {readPackageUp} from 'read-package-up';
 import {safeResolveExports, pkgSetExport} from "../utils/npm-util.js";
-import {DeclaredError} from "../utils/js-util.js";
+import {DeclaredError, arrayify} from "../utils/js-util.js";
 import path from "node:path";
 import http from "node:http";
 import targetClasses from "../targets/target-classes.js";
@@ -143,6 +143,7 @@ export default class MikrokatCli {
 
 		serviceClasses+="}\n";
 
+		content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
 		content=content.replaceAll("$SERVICES",JSON.stringify(applicableServices,null,2));
 		content=content.replaceAll("$SERVICECLASSES",serviceClasses);
 		content=content.replaceAll("$SERVICEIMPORTS",serviceImports);
@@ -171,7 +172,8 @@ export default class MikrokatCli {
 			cwd: await this.getEffectiveCwd(),
 			mod: mod,
 			services: applicableServices,
-			serviceClasses
+			serviceClasses,
+			fileContent: await this.getFileContent()
 		});
 		let listener=createNodeRequestListener(request=>server.handleRequest({request}));
 		let httpServer=http.createServer(listener);
@@ -298,5 +300,16 @@ export default class MikrokatCli {
 		await fsp.writeFile(filenameAbs,textContent);
 
 		return content;
+	}
+
+	async getFileContent() {
+		let config=await this.getConfig();
+		let cwd=await this.getEffectiveCwd();
+
+		let contentFiles={};
+		for (let file of arrayify(config.files))
+			contentFiles[file]=await fsp.readFile(path.join(cwd,file),"utf8");
+
+		return contentFiles;
 	}
 }

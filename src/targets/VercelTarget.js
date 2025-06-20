@@ -14,12 +14,14 @@ import {MikrokatServer} from "mikrokat";
 $SERVICEIMPORTS
 let serviceClasses=$SERVICECLASSES;
 let services=$SERVICES;
+let fileContent=$FILECONTENT;
 
 let server=new MikrokatServer({
 	target: "vercel",
 	mod, 
 	serviceClasses,
-	services
+	services,
+	fileContent
 });
 
 export default async function handler(request) {

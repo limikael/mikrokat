@@ -15,6 +15,7 @@ $SERVICEIMPORTS
 
 let serviceClasses=$SERVICECLASSES;
 let services=$SERVICES;
+let fileContent=$FILECONTENT;
 let serverMap=new Map();
 
 export default {
@@ -25,7 +26,8 @@ export default {
 				mod, 
 				env,
 				serviceClasses,
-				services
+				services,
+				fileContent
 			}));
 		}
 

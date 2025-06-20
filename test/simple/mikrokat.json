@@ -1,0 +1,7 @@
+{
+  "main": "server.js",
+  "files": [
+    "myfile.txt"
+  ],
+  "services": {}
+}

@@ -1,0 +1,6 @@
+todo:
+
+- onStart function
+- service binding dependency check
+- config file system
+- static content

@@ -13,8 +13,12 @@ describe("MikrokatServer",()=>{
 		}
 
 		let mod={
-			async onFetch({request, env}) {
-				return new Response(await env.MYSERVICE.test());
+			async onFetch({request, env, fs}) {
+				return new Response(
+					fs.readFileSync("hello.txt")+
+					await fs.promises.readFile("hello.txt")+
+					await env.MYSERVICE.test()
+				);
 			}
 		};
 
@@ -26,12 +30,16 @@ describe("MikrokatServer",()=>{
 			MYSERVICE: {type: "myservice", hello: 123}
 		}
 
+		let fileContent={
+			"hello.txt": "world"
+		};
+
 		let env={};
-		let server=new MikrokatServer({mod,env,services,serviceClasses});
+		let server=new MikrokatServer({mod,env,services,serviceClasses,fileContent});
 
 		let request=new Request("http://hello.world");
 		let response=await server.handleRequest({request: request});
 
-		expect(await response.text()).toEqual("hello123");
+		expect(await response.text()).toEqual("worldworldhello123");
 	});
 })

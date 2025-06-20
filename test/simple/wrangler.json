@@ -1,6 +1,8 @@
 {
   "main": ".target/entrypoint.cloudflare.js",
+  "name": "simple",
   "build": {
-    "command": "TARGET=cloudflare mikrokat build"
-  }
+    "command": "TARGET=cloudflare npm run build"
+  },
+  "compatibility_date": "2025-06-20"
 }

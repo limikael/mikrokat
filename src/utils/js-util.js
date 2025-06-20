@@ -14,3 +14,13 @@ export async function responseAssert(response) {
 
 	throw e;
 }
+
+export function arrayify(a) {
+	if (Array.isArray(a))
+		return a;
+
+	if (a===undefined)
+		return [];
+
+	return [a];
+}

@@ -15,12 +15,14 @@ import {MikrokatServer} from "mikrokat";
 $SERVICEIMPORTS
 let serviceClasses=$SERVICECLASSES;
 let services=$SERVICES;
+let fileContent=$FILECONTENT;
 
 let server=new MikrokatServer({
 	target: "fastly",
 	mod, 
 	serviceClasses,
-	services
+	services,
+	fileContent
 });
 
 addEventListener("fetch", ev=>{
