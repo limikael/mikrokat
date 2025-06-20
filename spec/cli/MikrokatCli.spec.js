@@ -80,17 +80,20 @@ describe("MikrokatCli",()=>{
 				"services": {
 					"DB": {
 						"type": "sqlite",
-						"filename": "test.sqlite"
+						"filename": "test.sqlite",
+						"exposeApi": "d1"
 					},
 					"DB2": [
 						{
 							"target": "hello",
 							"type": "sqlite",
-							"filename": "test.sqlite"
+							"filename": "test.sqlite",
+							"exposeApi": "d1"
 						},
 						{
 							"type": "sqlite",
-							"filename": "test2.sqlite"
+							"filename": "test2.sqlite",
+							"exposeApi": "d1"
 						}
 					]
 				}
@@ -99,11 +102,11 @@ describe("MikrokatCli",()=>{
 
 		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
 			export async function onFetch({request, env}) {
-				let res=await (await env.DB.prepare("CREATE TABLE test (val initeger)")).run([]);
-				let res2=await (await env.DB.prepare("INSERT INTO test (val) VALUES (123)")).run([]);
-				let res3=await (await env.DB.prepare("SELECT * FROM test")).all([]);
+				let res=await env.DB.prepare("CREATE TABLE test (val initeger)").run();
+				let res2=await env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
+				let res3=await env.DB.prepare("SELECT * FROM test").all();
 
-				let res4=await (await env.DB2.prepare("CREATE TABLE test2 (val initeger)")).run([]);
+				let res4=await env.DB2.prepare("CREATE TABLE test2 (val initeger)").run();
 
 				return Response.json(res3.results);
 			}

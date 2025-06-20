@@ -13,7 +13,13 @@ export default class MikrokatServer {
 		for (let k in services) {
 			let def=services[k];
 			let cls=serviceClasses[def.type];
-			this.env[k]=new cls({cwd, target, ...def});
+			let service=new cls({cwd, target, ...def});
+
+			if (service.api)
+				this.env[k]=service.api;
+
+			else
+				this.env[k]=service;
 		}
 	}
 

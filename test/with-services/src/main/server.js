@@ -3,8 +3,8 @@ export async function onFetch({request, env}) {
 
 	res+="<b>hello</b>";
 
-	let sqliteres=await (await env.DB.prepare("SELECT * FROM things")).all([]);
-	res+="<pre>"+JSON.stringify(sqliteres,null,2)+"</pre>";
+	let dbres=await env.DB.prepare("SELECT * FROM things").all();
+	res+="<pre>"+JSON.stringify(dbres,null,2)+"</pre>";
 
 	let neonres=await (await env.NEON.prepare("SELECT * FROM things")).all([]);
 	res+="<pre>"+JSON.stringify(neonres,null,2)+"</pre>";

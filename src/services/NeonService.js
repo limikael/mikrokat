@@ -1,29 +1,18 @@
 import { neon } from '@neondatabase/serverless';
-
-class Statement {
-	constructor({neon, query}) {
-		this.neon=neon;
-		this.query=query;
-	}
-
-	async all(params=[]) {
-		let results=await this.neon.query(this.query);
-
-		return {
-			success: true,
-			meta: {
-			},
-			results: results
-		}
-	}
-}
+import SqlBackendPostgres from "../bridge/SqlBackendPostgres.js";
+import {createSqlFrontend} from "../bridge/sql-frontend-factory.js";
 
 export default class NeonService {
-	constructor({url}) {
+	constructor({url, exposeApi}) {
 		this.sql=neon(url);
-	}
 
-	async prepare(query) {
-		return new Statement({neon: this.sql, query: query});
+		if (exposeApi) {
+			this.backend=new SqlBackendPostgres(this.sql);
+			this.api=createSqlFrontend(exposeApi,this.backend);
+		}
+
+		else {
+			this.api=this.sql;
+		}
 	}
 }
