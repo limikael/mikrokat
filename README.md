@@ -131,26 +131,26 @@ Service bindings are declared in the `mikrokat.json` file:
 
 ```json
 {
-    "services": {
-        "DB": [
-            {
-                "type": "sqlite",
-                "filename": "local.sqlite",
-                "if": { "target": "node" },
-                "exposeApi": "d1"
-            },
-            {
-                "type": "neon",
-                "url": "postgresql://...",
-                "if": { "target": "netlify" },
-                "exposeApi": "d1"
-            }
-        ],
-        "AI": {
-            "type": "openai",
-            "apiKey": "...."
-        }
+  "services": {
+    "DB": [
+      {
+        "type": "sqlite",
+        "filename": "local.sqlite",
+        "if": { "target": "node" },
+        "exposeApi": "d1"
+      },
+      {
+        "type": "neon",
+        "url": "postgresql://...",
+        "if": { "target": "netlify" },
+        "exposeApi": "d1"
+      }
+    ],
+    "AI": {
+      "type": "openai",
+      "apiKey": "...."
     }
+  }
 }
 ```
 
