@@ -118,12 +118,57 @@ This allows edge functions to access configuration or data without requiring a t
 
 Bindable services provide a unified interface to external resources like databases, AI models, or payments, allowing your code to stay portable and vendor-agnostic - helping you avoid lock-in to specific platform APIs.
 
-Mikrokat will support service bindings through a unified runtime interface. Example:
+Mikrokat supports service bindings through a unified runtime interface. These are available through the `env` field of all events triggered. Here is an example of
+how to access services from inside the `onFetch` function:
 
 ```js
-const result = await env.DB.query("SELECT * FROM users");
-const summary = await env.AI.complete({ prompt: "Summarize this" });
-await env.PAYMENT.charge({ amount: 1000, currency: "USD" });
+export function onFetch({env}) {
+  const result = await env.DB.prepare("SELECT * FROM users").all();
+  const summary = await env.AI.completion({ prompt: "Summarize this" });
+  // ...
+}
 ```
 
 This enables writing portable code that integrates with external services (databases, AI, payments, vector search, etc.) without platform-specific boilerplate.
+
+### Declaring service bindings
+
+Service bindings are declared in the `mikrokat.json` file:
+
+```json
+{
+    "services": {
+        "DB": [
+            {
+                "type": "sqlite",
+                "filename": "local.sqlite",
+                "if": { "target": "node" },
+                "exposeApi": "d1"
+            },
+            {
+                "type": "neon",
+                "url": "postgresql://...",
+                "if": { "target": "netlify" },
+                "exposeApi": "d1"
+            }
+        ],
+        "AI": {
+            "type": "openai",
+            "apiKey": ....
+        }
+    }
+}
+```
+
+The `services` field of `mikrokat.json` is a dictionary with the binding name of the service as the key. The value is either a single service definition, or an array of service definitions. If an array is used, the first matching service wil be passed to the app.
+
+- `type`: specifies the backend implementation of the service.
+  - Example values: `"sqlite"` (for better-sqlite3), `"neon"` (for Neon serverless Postgres)
+
+- `exposeApi`: defines which API style should be exposed to your application code.
+  - This lets you use a consistent API (like D1) across different backends.
+  - Example: `"d1"` to expose a D1-style interface (with `.prepare().all()`, etc.)
+
+- `if`: optional condition to select this binding for a specific target.
+  - Example: `{ "target": "node" }` to use this only when building for Node
+  - Useful for providing platform-specific service definitions
