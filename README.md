@@ -15,6 +15,8 @@ Mikrokat compiles a universal request handler into platform-specific edge runtim
 - Unified API handler - Write a single `onFetch` handler that works across platforms.
 - Bindable services - Unified access to services like databases, AI, and payments (WIP).
 
+One way of unserstanding mikrokat is that is it similar to [serverless](https://www.serverless.com/), but for [Edge Computing](https://en.wikipedia.org/wiki/Edge_computing).
+
 ## What Problem Does Mikrokat Solve?
 
 Modern web developers increasingly want to deploy lightweight, full-featured applications directly to edge platforms like Cloudflare Workers, Vercel Edge Functions, Fastly Compute@Edge, and Netlify. These platforms offer high performance, scalability, and global reach — but each has its own configuration formats, build pipelines, and deployment quirks.
