@@ -2,6 +2,13 @@
 
 **Mikrokat solves the problem of platform fragmentation in edge computing by letting developers build universal, service-bound, edge-native applications from a single codebase.**
 
+* [What Problem Does Mikrokat Solve?](#what-problem-does-mikrokat-solve)
+* [Mikrokat’s Solution](#mikrokats-solution)
+* [Getting Started](#getting-started)
+* [Writing Your Handler](#writing-your-handler)
+* [Bindable Services](#bindable-services)
+* [Config Filesystem](#config-filesystem)
+
 Mikrokat compiles a universal request handler into platform-specific edge runtimes, letting you write once and deploy anywhere.
 
 - Multi-platform build targets, currently supports: Cloudflare, Vercel, Fastly and Netlify.
@@ -93,27 +100,6 @@ export async function onFetch({request, env}) {
 }
 ```
 
-## Mini Filesystem (WIP)
-
-The virtual filesystem makes it possible to include configuration or other static files directly in your edge deployment, which is essential for platforms that don’t support traditional file access.
-
-You can bundle additional files (e.g. `config.json` or other config files) into your edge functions.
-
-Please note that this is not intended for serving static content to the client, but for smaller pieces of
-information, such as configuration files, that needs to be available at runtime.
-
-```bash
-mikrokat build --files=config.json,info.txt
-```
-
-These files are available at runtime using:
-
-```js
-const config = JSON.parse(ev.fs.readFileSync("config.json", "utf-8"));
-```
-
-This allows edge functions to access configuration or data without requiring a traditional file system.
-
 ## Bindable Services
 
 Bindable services provide a unified interface to external resources like databases, AI models, or payments, allowing your code to stay portable and vendor-agnostic - helping you avoid lock-in to specific platform APIs.
@@ -173,3 +159,26 @@ The `services` field of `mikrokat.json` is a dictionary with the binding name of
 - `if`: optional condition to select this binding for a specific target.<br/>
   Useful for providing platform-specific service definitions.<br/>
   Example: `{ "target": "node" }` to use this only when building for Node.
+
+## Config Filesystem
+
+The virtual config filesystem makes it possible to include configuration or other static files directly in your edge deployment, which is essential for platforms that don’t support traditional file access.
+
+Please note that this is not intended for serving static content to the client, but for smaller pieces of
+information, such as configuration files, that needs to be available at runtime.
+
+In your `mikrokat.json`:
+
+```json
+{
+  "files": ["config.json","info.yaml","conf/*.json"]
+}
+```
+
+These files are then available at runtime using:
+
+```js
+const config = JSON.parse(ev.fs.readFileSync("config.json", "utf-8"));
+```
+
+This allows edge functions to access configuration or data without requiring a traditional file system.
