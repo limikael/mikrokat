@@ -1,6 +1,6 @@
 {
   "name": "mikrokat",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "bin": {
     "mikrokat": "src/cli/mikrokat.js"
   },
