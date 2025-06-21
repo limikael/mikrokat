@@ -124,6 +124,7 @@ The event object received by these function contains the following fields:
 - `fs` - A "mini filesystem" for configuration files. See [Config Filesystem](#config-filesystem).
 - `appData` - An object where you can store runtime info. It is initiated to`{}`, so it is totally up to you what you want to store there.
 - `cron` - The cron expression that triggered a scheduled event. Only sent to the `onSchedule` function.
+- `imports` - Contains references to the resolved and bundled conditional imports. See [Conditional Imports](#conditional-imports).
 
 ## Middlewares
 
@@ -164,7 +165,39 @@ This is useful for things like custom 404 pages, logging, or handling proxy-styl
 
 ## Conditional Imports
 
-Documentation WIP...
+Mikrokat supports conditional imports declared in your `mikrokat.json` file. This lets you specify platform-dependent module bindings that are 
+resolved at buildtime and passed into your handler functions.
+
+When deploying to edge platforms like those Mikrokat targets, the code is bundled before deployment. This means you can't use dynamic `import()` 
+with runtime conditions like `if (target === 'node')`. All imports must be statically analyzable.
+
+Conditional imports in Mikrokat solve this by allowing you to declaratively map platform-specific modules,
+which are resolved at build time and passed into your app at runtime.
+
+Declare conditional imports in your `mikrokat.json` file:
+
+```json
+{
+  "imports: [
+    {
+      "import": "Database",
+      "from": "better-sqlite3",
+      "if": {
+        "target": "node"
+      }
+    }
+  ]
+}
+```
+
+The default export from `better-sqlite3` will now available in your handlers like this:
+
+```js
+export function onFetch({env, target, imports}) {
+    if (target=="node")
+        env.DB=new imports.Database("local.sqlite");
+}
+```
 
 ## Config Filesystem
 
