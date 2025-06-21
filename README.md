@@ -7,14 +7,13 @@
 * [Getting Started](#getting-started)
 * [Writing Your Handler](#writing-your-handler)
 * [Middlewares](#middlewares)
-* [Bindable Services](#bindable-services)
+* [Conditional Imports](#conditional-imports)
 * [Config Filesystem](#config-filesystem)
 
 Mikrokat compiles a universal request handler into platform-specific edge runtimes, letting you write once and deploy anywhere.
 
 - Multi-platform build targets, currently supports: Cloudflare, Vercel, Fastly and Netlify.
 - Unified API handler - Write a single `onFetch` handler that works across platforms.
-- Bindable services - Unified access to services like databases, AI, and payments (WIP).
 
 One way of unserstanding mikrokat is that is it similar to [serverless](https://www.serverless.com/), but for [Edge Computing](https://en.wikipedia.org/wiki/Edge_computing).
 
@@ -26,7 +25,6 @@ As a result:
 
 - Developers must learn platform-specific APIs and deploy flows.
 - Applications must be restructured or rewritten to match the target platform.
-- Shared functionality like database access, AI integration, and HTTP fetch proxies must be re-implemented or manually adapted for each target.
 - Service binding declarations are not standardized, making multi-platform development cumbersome and error-prone.
 - There is no unified way to run and test the app locally in a way that mirrors edge deployment behavior.
 
@@ -37,7 +35,6 @@ Mikrokat introduces a universal edge runtime abstraction. Developers write a sin
 - Compiles platform-specific entrypoints (Cloudflare, Vercel, Fastly, etc.)
 - Handles static file bundling and injection
 - Generates configuration files (wrangler.toml, fastly.toml, etc.)
-- Normalizes service bindings into `env.SERVICE` APIs (e.g., env.DB.query(...), env.AI.fetch(...))
 - Enables local development and testing
 
 This allows developers to build edge-native applications once and deploy them to any supported platform without modification - eliminating lock-in and reducing friction.
@@ -123,7 +120,7 @@ The event object received by these function contains the following fields:
 
 - `request` - The request to process. A standard [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object. Only sent to the `onFetch` function.
 - `ctx` - A platform dependent context variable related to the request. Only sent to the `onFetch` function. See platform documentation about what it contains.
-- `env` - Contains your service bindings and environment variables.
+- `env` - Contains environment variables and service bindings (if supported by the underlying platform).
 - `fs` - A "mini filesystem" for configuration files. See [Config Filesystem](#config-filesystem).
 - `appData` - An object where you can store runtime info. It is initiated to`{}`, so it is totally up to you what you want to store there.
 - `cron` - The cron expression that triggered a scheduled event. Only sent to the `onSchedule` function.
@@ -165,71 +162,9 @@ export function onStart({ use }) {
 
 This is useful for things like custom 404 pages, logging, or handling proxy-style fallthroughs.
 
-## Bindable Services
+## Conditional Imports
 
-Bindable services provide a unified interface to external resources like databases, AI models, or payments, allowing your code to stay portable and vendor-agnostic - helping you avoid lock-in to specific platform APIs.
-
-Mikrokat supports service bindings through a unified runtime interface. These are available through the `env` field of all events triggered. Here is an example of
-how to access services from inside the `onFetch` function:
-
-```js
-export function onFetch({env}) {
-  const result = await env.DB.prepare("SELECT * FROM users").all();
-  const summary = await env.AI.completion({ prompt: "Summarize this" });
-  // ...
-}
-```
-
-It is noteworthy that while there exist clear classes of services, such as SQL database, AI completion, etc, each vendor has their own API when accessing these
-services, often with subtle variations which makes it difficult to use one service as a drop-in replacement for another. 
-Mikrokat therefore has a translation layer, so you can access a kind of "least common denominator" for each class of service,
-and wraps the interface of the service to expose its API in a configurable way. This way, you can access a SQL database from Neon using the API for Cloudflare D1,
-or access AI completion services at DeepSeek using the API from OpenAI, without having to change your code. 
-
-This enables writing portable code that integrates with external services (databases, AI, payments, vector search, etc.) without platform-specific boilerplate.
-
-### Declaring service bindings
-
-Service bindings are declared in the `mikrokat.json` file:
-
-```json
-{
-  "services": {
-    "DB": [
-      {
-        "type": "sqlite",
-        "filename": "local.sqlite",
-        "if": { "target": "node" },
-        "exposeApi": "d1"
-      },
-      {
-        "type": "neon",
-        "url": "postgresql://...",
-        "if": { "target": "netlify" },
-        "exposeApi": "d1"
-      }
-    ],
-    "AI": {
-      "type": "openai",
-      "apiKey": "...."
-    }
-  }
-}
-```
-
-The `services` field of `mikrokat.json` is a dictionary with the binding name of the service as the key. The value is either a single service definition, or an array of service definitions. If an array is used, the first matching service wil be passed to the app.
-
-- `type`: specifies the backend implementation of the service.<br/>
-  Example values: `"sqlite"` (for better-sqlite3), `"neon"` (for Neon serverless Postgres)
-
-- `exposeApi`: defines which API style should be exposed to your application code.<br/>
-  Mikrokat can translate between different backend implementations and frontend APIs, allowing your code to use a consistent interface
-  regardless of which service is active at runtime. This lets you use a consistent API (like D1) across different backends.<br/>
-  Example: `"d1"` to expose a D1-style interface (with `.prepare().all()`, etc.)
-
-- `if`: optional condition to select this binding for a specific target.<br/>
-  Useful for providing platform-specific service definitions.<br/>
-  Example: `{ "target": "node" }` to use this only when building for Node.
+Documentation WIP...
 
 ## Config Filesystem
 
