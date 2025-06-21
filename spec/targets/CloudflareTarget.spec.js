@@ -20,4 +20,25 @@ describe("CloudflareTaget",()=>{
 		let pkg=await JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
 		expect(pkg.dependencies.wrangler).toEqual("^4.20.1");
 	});
+
+	it("cloudflare can be built",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
+			{
+				"imports": [
+					{"import": "A", "from": "./src/something.js", "if": {"target": "cloudflare"}}
+				]
+			}
+		`);
+
+		let cli=new MikrokatCli({options: {cwd: projectDir, target: "cloudflare", quiet: true}});
+
+		await cli.init();
+		await cli.build();
+	});
+
 })

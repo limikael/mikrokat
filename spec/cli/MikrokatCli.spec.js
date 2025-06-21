@@ -29,39 +29,10 @@ describe("MikrokatCli",()=>{
 
 		expect(await cli.getConfig()).toEqual({
 			main: "src/main/server.js",
-			services: {}
 		});
 
 		expect(fs.existsSync(path.join(projectDir,"src/main/server.js"))).toBeTrue();
 		expect(await fsp.readFile(path.join(projectDir,".gitignore"),"utf8")).toEqual(".target\nnode_modules\n");
-	});
-
-	it("can compute applicable services",async ()=>{
-		let projectDir=path.join(__dirname,"../tmp/project");
-
-		await fsp.rm(projectDir,{force:true, recursive: true});
-		await fsp.mkdir(projectDir,{recursive: true});
-		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
-		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
-			services: {
-				DB1: {type: "database"},
-				DB2: {type: "database", if: {target: "hello"}},
-				DB3: {type: "database", if: {target: "some other target"}},
-				DB4: [
-					{type: "database", if: {target: "not this one"}},
-					{type: "database", if: {target: "hello"}},
-				]
-			}
-		}));
-
-		let cli=new MikrokatCli({options: {cwd: projectDir, target: "hello"}});
-		expect(await cli.getApplicableServices()).toEqual({
-			DB1: { type: 'database' },
-			DB2: { type: 'database', if: { target: 'hello' } },
-			DB4: { type: 'database', if: { target: 'hello' } }
-		});
-
-		//console.log(await cli.getApplicableServices());
 	});
 
 	it("can reply to a request",async ()=>{
@@ -79,38 +50,20 @@ describe("MikrokatCli",()=>{
 			{
 				"main": "src/main/server.js",
 				"files": "myfile.txt",
-				"services": {
-					"DB": {
-						"type": "sqlite",
-						"filename": "test.sqlite",
-						"exposeApi": "d1"
-					},
-					"DB2": [
-						{
-							"target": "hello",
-							"type": "sqlite",
-							"filename": "test.sqlite",
-							"exposeApi": "d1"
-						},
-						{
-							"type": "sqlite",
-							"filename": "test2.sqlite",
-							"exposeApi": "d1"
-						}
-					]
-				}
+				"imports": [
+					{"import": "Database", "from": "better-sqlite3", "if": {"target": "node"}}
+				]
 			}
 		`);
 
 		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
-			export async function onFetch({request, env, fs}) {
-				let res=await env.DB.prepare("CREATE TABLE test (val initeger)").run();
-				let res2=await env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
-				let res3=await env.DB.prepare("SELECT * FROM test").all();
+			export async function onFetch({request, env, fs, imports}) {
+				env.DB=new imports.Database("${path.join(projectDir,"test.sqlite")}");
+				let res=env.DB.prepare("CREATE TABLE test (val initeger)").run();
+				let res2=env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
+				let res3=env.DB.prepare("SELECT * FROM test").all();
 
-				let res4=await env.DB2.prepare("CREATE TABLE test2 (val initeger)").run();
-
-				let txt=JSON.stringify(res3.results)+fs.readFileSync("myfile.txt");
+				let txt=JSON.stringify(res3)+fs.readFileSync("myfile.txt");
 
 				return new Response(txt);
 			}

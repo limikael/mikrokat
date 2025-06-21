@@ -1,36 +1,12 @@
 {
   "main": "src/main/server.js",
-  "services": {
-    "DB": [
-      {
-        "type": "sqlite",
-        "filename": "test.sqlite",
-        "exposeApi": "d1",
-        "if": {"target": "node"}
-      },
-      {
-        "type": "neon",
-        "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
-        "exposeApi": "d1",
-        "if": {"target": "netlify"}
-      },
-      {
-        "type": "neon",
-        "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
-        "exposeApi": "d1",
-        "if": {"target": "vercel"}
-      },
-      {
-        "type": "neon",
-        "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
-        "exposeApi": "d1",
-        "if": {"target": "fastly"}
-      },
-    ],
-    "NEON": {
-      "type": "neon",
-      "url": "postgresql://neondb_owner:npg_gf5O3qtuIQpB@ep-shy-haze-a1lriwas-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require",
-      "exposeApi": "d1"
-    },
-  }
+  "imports": [
+    {
+      "import": "Database",
+      "from": "better-sqlite3",
+      "if": {
+        "target": "node"
+      }
+    }
+  ]
 }

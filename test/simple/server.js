@@ -6,7 +6,7 @@ async function middleware({request}) {
 export async function onStart({appData, use}) {
 	use(middleware);
 
-	console.log("starting, init appData")
+	//console.log("starting, init appData")
 	appData.value=123;
 }
 

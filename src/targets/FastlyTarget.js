@@ -9,19 +9,17 @@ let FASTLY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import * as mod from "$ENTRYPOINT";
+import * as mod from $ENTRYPOINT;
 import {MikrokatServer} from "mikrokat";
 
-$SERVICEIMPORTS
-let serviceClasses=$SERVICECLASSES;
-let services=$SERVICES;
+$IMPORTS
+
 let fileContent=$FILECONTENT;
 
 let server=new MikrokatServer({
 	target: "fastly",
 	mod, 
-	serviceClasses,
-	services,
+	imports,
 	fileContent
 });
 

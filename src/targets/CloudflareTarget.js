@@ -8,13 +8,11 @@ let CLOUDFLARE_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import * as mod from "$ENTRYPOINT";
+import * as mod from $ENTRYPOINT;
 import {MikrokatServer} from "mikrokat";
 
-$SERVICEIMPORTS
+$IMPORTS
 
-let serviceClasses=$SERVICECLASSES;
-let services=$SERVICES;
 let fileContent=$FILECONTENT;
 let serverMap=new Map();
 
@@ -32,8 +30,7 @@ export default {
 				target: "cloudflare",
 				mod, 
 				env,
-				serviceClasses,
-				services,
+				imports,
 				fileContent
 			}));
 		}

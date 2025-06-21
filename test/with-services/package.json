@@ -9,13 +9,19 @@
     "dev:fastly": "fastly compute serve",
     "dev:netlify": "TARGET=netlify mikrokat build && netlify dev --cwd=.",
     "deploy:netlify": "TARGET=netlify mikrokat build && netlify deploy --cwd=.",
-    "dev:vercel": "TARGET=vercel npm run build && vercel dev"
+    "dev:vercel": "TARGET=vercel npm run build && vercel dev",
+    "deploy:cloudflare": "wrangler deploy",
+    "deploy:fastly": "fastly compute publish"
   },
   "dependencies": {
+    "@fastly/cli": "^11.3.0",
+    "@fastly/js-compute": "^3.34.0",
+    "kysely": "^0.28.2",
+    "kysely-d1": "^0.4.0",
+    "kysely-neon": "^1.3.0",
     "mikrokat": "^1.0.0",
     "netlify-cli": "^22.1.3",
     "vercel": "^43.2.0",
-    "@fastly/cli": "^11.3.0",
-    "@fastly/js-compute": "^3.34.0"
+    "wrangler": "^4.20.1"
   }
 }

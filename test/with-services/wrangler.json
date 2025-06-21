@@ -6,8 +6,13 @@
   "d1_databases": [
     {
       "binding": "DB",
-  	  "database_name": "mydb",
-  	  "database_id": "myid"
+      "database_name": "mydb",
+      "database_id": "myid"
     }
-  ]
+  ],
+  "name": "with-services",
+  "compatibility_date": "2025-06-21",
+  "assets": {
+    "directory": "./public"
+  }
 }

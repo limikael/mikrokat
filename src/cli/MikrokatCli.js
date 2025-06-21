@@ -9,9 +9,8 @@ import targetClasses from "../targets/target-classes.js";
 import fs, {promises as fsp} from "fs";
 import {fileURLToPath} from 'url';
 import * as TOML from '@ltd/j-toml';
-import {getServiceTypes} from "../services/service-util.js";
-import serviceFiles from "../services/service-files.js";
 import JSON5 from "json5";
+import ConditionalImports from "../utils/ConditionalImports.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -61,47 +60,12 @@ export default class MikrokatCli {
 		return path.dirname(packageInfo.path);
 	}
 
-	matchServiceIf(clause) {
-		if (!clause)
-			return true;
-
-		if (clause.target &&
-				clause.target!=this.options.target)
-			return false;
-
-		return true;
-	}
-
-	async getApplicableServices() {
-		let resultServices={};
-		let declaredServices=(await this.getConfig()).services;
-
-		for (let k in declaredServices) {
-			if (Array.isArray(declaredServices[k])) {
-				let cands=declaredServices[k];
-				let useCand=cands.find(c=>this.matchServiceIf(c.if));
-				if (useCand)
-					resultServices[k]=useCand;
-			}
-
-			else {
-				if (this.matchServiceIf(declaredServices[k].if))
-					resultServices[k]=declaredServices[k];
-			}
-		}
-
-		return resultServices;
-	}
-
 	async getConfig() {
 		let cwd=await this.getEffectiveCwd();
 		let config={};
 
 		if (fs.existsSync(path.join(cwd,"mikrokat.json")))
 			config={...config,...JSON5.parse(await fsp.readFile(path.join(cwd,"mikrokat.json")))}
-
-		if (!config.services)
-			config.services={};
 
 		return config;
 	}
@@ -126,53 +90,33 @@ export default class MikrokatCli {
 		let outfileAbs=path.resolve(cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
-		let applicableServices=await this.getApplicableServices();
-		let serviceImports="";
-		let serviceClasses="{\n";
-		let serviceTypes=getServiceTypes(applicableServices);
-
-		for (let serviceType of serviceTypes) {
-			if (!serviceFiles[serviceType])
-				throw new DeclaredError("Unknown service type: "+serviceType);
-
-			let servicePathAbs=path.join(__dirname,"../services/",serviceFiles[serviceType]);
-			let servicePathRel=path.relative(path.dirname(outfileAbs),servicePathAbs);
-			serviceImports+=`import Service_${serviceType} from ${JSON.stringify(servicePathRel)};\n`;
-			serviceClasses+=`\"${serviceType}\": Service_${serviceType},\n`;
-		}
-
-		serviceClasses+="}\n";
+		let conditionalImports=await this.getConditionalImports();
 
 		content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
-		content=content.replaceAll("$SERVICES",JSON.stringify(applicableServices,null,2));
-		content=content.replaceAll("$SERVICECLASSES",serviceClasses);
-		content=content.replaceAll("$SERVICEIMPORTS",serviceImports);
-		content=content.replaceAll("$ENTRYPOINT",path.relative(path.dirname(outfileAbs),entrypointAbs));
+		content=content.replaceAll("$IMPORTS",conditionalImports.getImportStub());
+		content=content.replaceAll("$ENTRYPOINT",JSON.stringify(path.relative(path.dirname(outfileAbs),entrypointAbs)));
 
 		await fsp.writeFile(outfileAbs,content);
 	}
 
+	async getConditionalImports() {
+		let config=await this.getConfig();
+		return new ConditionalImports({
+			cwd: await this.getEffectiveCwd(),
+			truth: {target: this.options.target},
+			imports: config.imports
+		});
+	}
+
 	async serve() {
 		let config=await this.getConfig();
-		let applicableServices=await this.getApplicableServices();
-		let serviceTypes=getServiceTypes(applicableServices);
-		let serviceClasses={};
-
-		for (let serviceType of serviceTypes) {
-			if (!serviceFiles[serviceType])
-				throw new DeclaredError("Unknown service type: "+serviceType);
-
-			let serviceImport=path.join(__dirname,"../services/",serviceFiles[serviceType])
-			serviceClasses[serviceType]=(await import(serviceImport)).default;
-		}
-
+		let conditionalImports=await this.getConditionalImports();
 		let mod=await import(await this.getAbsoluteEntrypoint());
 		let server=new MikrokatServer({
 			target: "node",
 			cwd: await this.getEffectiveCwd(),
 			mod: mod,
-			services: applicableServices,
-			serviceClasses,
+			imports: await conditionalImports.loadImports(),
 			fileContent: await this.getFileContent()
 		});
 		let listener=createNodeRequestListener(request=>server.handleRequest({request}));
@@ -235,9 +179,6 @@ export default class MikrokatCli {
 
 			if (!mikrokat.main)
 				mikrokat.main="src/main/server.js";
-
-			if (!mikrokat.services)
-				mikrokat.services={};
 
 			return mikrokat;
 		});

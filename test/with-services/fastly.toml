@@ -1,14 +1,12 @@
-# This file describes a Fastly Compute package. To learn more visit:
-# https://www.fastly.com/documentation/reference/compute/fastly-toml
 
 authors = []
-description = ""
-language = "javascript"
+description = ''
+language = 'javascript'
 manifest_version = 3
-name = "with-services"
-service_id = ""
+name = 'with-services'
+service_id = ''
 
 [local_server]
 
 [scripts]
-  build = "TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
+build = 'TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm'
