@@ -178,7 +178,7 @@ Declare conditional imports in your `mikrokat.json` file:
 
 ```json
 {
-  "imports: [
+  "imports": [
     {
       "import": "Database",
       "from": "better-sqlite3",
