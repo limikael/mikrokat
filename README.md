@@ -7,6 +7,7 @@
 * [Getting Started](#getting-started)
 * [Writing Your Handler](#writing-your-handler)
 * [Middlewares](#middlewares)
+* [Static Content](#static-content)
 * [Conditional Imports](#conditional-imports)
 * [Config Filesystem](#config-filesystem)
 
@@ -163,6 +164,11 @@ export function onStart({ use }) {
 
 This is useful for things like custom 404 pages, logging, or handling proxy-style fallthroughs.
 
+## Static Content
+
+By strong convention, all files in the `public` directory will be served statically. Incoming requests for existing static content will
+be served directly, and your handler will not be invoked.
+
 ## Conditional Imports
 
 Mikrokat supports conditional imports declared in your `mikrokat.json` file. This lets you specify platform-dependent module bindings that are 
@@ -204,7 +210,7 @@ export function onFetch({env, target, imports}) {
 The virtual config filesystem makes it possible to include configuration or other static files directly in your edge deployment, which is essential for platforms that don’t support traditional file access.
 
 Please note that this is not intended for serving static content to the client, but for smaller pieces of
-information, such as configuration files, that needs to be available at runtime.
+information, such as configuration files, that needs to be available at runtime. For serving static content, see [Static Content](#static-content).
 
 In your `mikrokat.json`:
 
