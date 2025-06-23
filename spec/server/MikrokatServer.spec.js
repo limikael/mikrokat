@@ -2,16 +2,6 @@ import MikrokatServer from "../../src/server/MikrokatServer.js";
 
 describe("MikrokatServer",()=>{
 	it("can handle a request",async ()=>{
-		class MyService {
-			constructor({hello}) {
-				this.hello=hello;
-			}
-
-			test() {
-				return "hello"+this.hello;
-			}
-		}
-
 		let mod={
 			async onFetch({request, env, fs, imports}) {
 				return new Response(
@@ -37,6 +27,31 @@ describe("MikrokatServer",()=>{
 		let response=await server.handleRequest({request: request});
 
 		expect(await response.text()).toEqual("worldworldhello123");
+	});
+
+	it("has a local fetch",async ()=>{
+		let mod={
+			async onFetch({request, env, localFetch}) {
+				let url=new URL(request.url);
+
+				//console.log(url.pathname);
+				if (url.pathname=="/testlocal") {
+					return await localFetch("/hello");
+				}
+
+				return new Response("hello");
+			}
+		};
+
+		let env={};
+		let imports={};
+		let fileContent={};
+		let server=new MikrokatServer({mod,env,imports,fileContent});
+
+		let request=new Request("http://test.com/testlocal");
+		let response=await server.handleRequest({request: request});
+
+		expect(await response.text()).toEqual("hello");
 	});
 
 	it("runs start",async ()=>{

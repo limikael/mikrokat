@@ -19,7 +19,8 @@ export default class MikrokatServer {
 			fs: this.fs,
 			imports: this.imports,
 			appData: this.appData,
-			target: this.target
+			target: this.target,
+			localFetch: this.localFetch
 		});
 	}
 
@@ -44,9 +45,23 @@ export default class MikrokatServer {
 
 		await this.startPromise;
 
+		let localFetch=async (requestOrUrl, options={})=>{
+			if (requestOrUrl instanceof Request)
+				return await this.handleRequest({request: requestOrUrl, ctx: ctx});
+
+			//console.log("constructing url from: "+requestOrUrl);
+			let requestUrl=new URL(request.url);
+			let url=new URL(requestOrUrl,requestUrl.origin);
+			//console.log("fetching from: "+url);
+
+			let localRequest=new Request(url, options);
+			return await this.handleRequest({request: localRequest, ctx: ctx});
+		}
+
 		let ev={
 			...this.createEv(),
 			request: request,
+			localFetch: localFetch,
 			ctx: ctx,
 		};
 
