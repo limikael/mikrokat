@@ -158,8 +158,10 @@ export default class MikrokatCli {
 	}
 
 	async build() {
-		if (this.options.target=="node")
-			throw new Error("Node doesn't need building");
+		if (this.options.target=="node") {
+			this.log("Nothing to build for node.");
+			return;
+		}
 
 		let target=new targetClasses[this.options.target]({cli: this});
 
