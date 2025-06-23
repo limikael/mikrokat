@@ -6,6 +6,7 @@ test/**/pkg
 test/*/api
 yarn.lock
 pnpm-lock.yaml
+pnpm-workspace.yaml
 .netlify
 .target
 .wrangler

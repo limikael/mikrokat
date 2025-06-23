@@ -3,7 +3,6 @@ todo:
 x config file system
 x onStart function
 x middlewares
+x static content
 
-- service binding dependency check
-- static content
 - schedule

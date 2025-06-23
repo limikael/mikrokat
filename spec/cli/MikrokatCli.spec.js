@@ -35,8 +35,57 @@ describe("MikrokatCli",()=>{
 		expect(await fsp.readFile(path.join(projectDir,".gitignore"),"utf8")).toEqual(".target\nnode_modules\n");
 	});
 
-	it("can reply to a request",async ()=>{
+	it("can read file content",async ()=>{
 		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
+
+		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
+		await cli.init();
+
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
+			{
+				"files": ["myfile.txt"],
+			}
+		`);
+
+		let fileContent=await cli.getFileContent();
+		expect(fileContent).toEqual({"myfile.txt":"hello world"});
+	});
+
+	it("can serve static assets",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project1");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.mkdir(path.join(projectDir,"public"),{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"public/test.txt"),"hello world");
+		await fsp.writeFile(path.join(projectDir,"public/image.jpg"),"mock image");
+
+		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
+		await cli.init();
+
+		await cli.serve();
+
+		let response=await fetch("http://localhost:3000/test.txt");
+		expect(response.headers.get("content-type")).toEqual("text/plain");
+		expect(response.headers.get("content-length")).toEqual("11");
+
+		let responseBody=await response.text();
+		expect(responseBody).toEqual("hello world");
+
+		let response2=await fetch("http://localhost:3000/image.jpg");
+		expect(response2.headers.get("content-type")).toEqual("image/jpeg");
+
+		await cli.close();
+	});
+
+	it("can reply to a request",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project2");
 
 		await fsp.rm(projectDir,{force:true, recursive: true});
 		await fsp.mkdir(projectDir,{recursive: true});
@@ -75,26 +124,7 @@ describe("MikrokatCli",()=>{
 		let responseBody=await response.text();
 
 		expect(responseBody).toEqual(`[{"val":123}]hello world`);
-	});
 
-	it("can read file content",async ()=>{
-		let projectDir=path.join(__dirname,"../tmp/project");
-
-		await fsp.rm(projectDir,{force:true, recursive: true});
-		await fsp.mkdir(projectDir,{recursive: true});
-		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
-		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
-
-		let cli=new MikrokatCli({options: {cwd: projectDir, port: 3000, quiet: true}});
-		await cli.init();
-
-		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
-			{
-				"files": ["myfile.txt"],
-			}
-		`);
-
-		let fileContent=await cli.getFileContent();
-		expect(fileContent).toEqual({"myfile.txt":"hello world"});
+		await cli.close();
 	});
 })

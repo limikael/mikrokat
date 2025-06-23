@@ -2,3 +2,5 @@ spec
 test
 scripts
 attic
+pnpm-workspace.yaml
+pnpm-lock.yaml

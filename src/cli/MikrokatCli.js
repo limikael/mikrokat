@@ -11,6 +11,8 @@ import {fileURLToPath} from 'url';
 import * as TOML from '@ltd/j-toml';
 import JSON5 from "json5";
 import ConditionalImports from "../utils/ConditionalImports.js";
+import {serverListenPromise, serverClosePromise, createStreamBody} from "../utils/node-util.js";
+import mime from 'mime/lite';
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -119,18 +121,40 @@ export default class MikrokatCli {
 			imports: await conditionalImports.loadImports(),
 			fileContent: await this.getFileContent()
 		});
-		let listener=createNodeRequestListener(request=>server.handleRequest({request}));
-		let httpServer=http.createServer(listener);
 
-		await new Promise((resolve, reject)=>{
-			httpServer.listen(this.options.port,err=>{
-				if (err)
-					reject(err);
+		let cwd=await this.getEffectiveCwd();
+		let listener=createNodeRequestListener(async request=>{
+			let url=new URL(request.url);
+			let assetAbs=path.join(cwd,"public",url.pathname);
+			if (fs.existsSync(assetAbs) &&
+					fs.statSync(assetAbs).isFile()) {
 
-				this.log("Listening to port: "+this.options.port);
-				resolve();
-			});
-		})
+	    	    let stat=fs.statSync(assetAbs);        
+
+				let headers=new Headers();
+	    	    headers.set("content-type",mime.getType(assetAbs.slice(assetAbs.lastIndexOf(".")+1)));
+		        headers.set("content-length",stat.size);
+
+				let body=createStreamBody(fs.createReadStream(assetAbs));
+
+				return new Response(body,{headers});
+			}
+
+			return await server.handleRequest({request});
+		});
+		this.httpServer=http.createServer(listener);
+
+		await serverListenPromise(this.httpServer,this.options.port);
+
+		this.log("Listening to port: "+this.options.port);
+	}
+
+	async close() {
+		if (!this.httpServer)
+			throw new Error("Not running");
+
+		await serverClosePromise(this.httpServer);
+		this.httpServer=null;
 	}
 
 	async build() {
