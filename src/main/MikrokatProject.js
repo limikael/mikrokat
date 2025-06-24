@@ -61,6 +61,9 @@ export default class MikrokatProject {
 	}
 
 	async writeStub(outfile, content) {
+		if (!this.entrypoint)
+			throw new Error("Can't write stub, no entrypoint");
+
 		let outfileAbs=path.resolve(this.cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
