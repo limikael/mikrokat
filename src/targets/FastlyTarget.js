@@ -1,6 +1,6 @@
 import BaseTarget from "./BaseTarget.js";
 import {Section} from '@ltd/j-toml';
-import packageVersions from "../cli/package-versions.js";
+import packageVersions from "../main/package-versions.js";
 
 let FASTLY_STUB=`
 //

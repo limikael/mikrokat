@@ -1,4 +1,4 @@
-import MikrokatServer from "../server/MikrokatServer.js";
+import MikrokatServer from "./MikrokatServer.js";
 import {createNodeRequestListener} from "serve-fetch";
 import {readPackageUp} from 'read-package-up';
 import {safeResolveExports, pkgSetExport} from "../utils/npm-util.js";

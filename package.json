@@ -2,7 +2,7 @@
   "name": "mikrokat",
   "version": "1.0.10",
   "bin": {
-    "mikrokat": "src/cli/mikrokat.js"
+    "mikrokat": "src/main/mikrokat.js"
   },
   "scripts": {
     "test": "jasmine"

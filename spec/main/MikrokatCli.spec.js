@@ -1,4 +1,4 @@
-import MikrokatCli from "../../src/cli/MikrokatCli.js";
+import MikrokatCli from "../../src/main/MikrokatCli.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";

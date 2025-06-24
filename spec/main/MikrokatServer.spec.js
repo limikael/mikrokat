@@ -1,4 +1,4 @@
-import MikrokatServer from "../../src/server/MikrokatServer.js";
+import MikrokatServer from "../../src/main/MikrokatServer.js";
 
 describe("MikrokatServer",()=>{
 	it("can handle a request",async ()=>{
