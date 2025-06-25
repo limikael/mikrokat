@@ -11,6 +11,8 @@ import * as TOML from '@ltd/j-toml';
 import JSON5 from "json5";
 import ConditionalImports from "../utils/ConditionalImports.js";
 import {serverListenPromise, serverClosePromise, createStaticResponse} from "../utils/node-util.js";
+import {fileURLToPath} from 'url';
+import {getPackageVersion} from "../utils/node-util.js";
 
 let ENTRYPOINT_STUB=
 `export async function onFetch({request}) {
@@ -18,29 +20,31 @@ let ENTRYPOINT_STUB=
 }
 `;
 
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
+
 export default class MikrokatProject {
-	constructor({cwd, main, target, port, dependencies, logger}={}) {
-		this.dependencies=dependencies;
+	constructor({cwd, main, target, port, log}={}) {
 		this.main=main;
 		this.cwd=cwd;
 		this.target=target;
 		this.port=port;
-		this.logger=logger;
 
 		if (!this.target)
 			this.target="node";
-	}
 
-	log=(...args)=>{
-		if (this.logger)
-			this.logger(...args);
+		if (typeof log=="function")
+			this.log=log;
+
+		else if (log!==false)
+			this.log=(...args)=>console.log(...args);
 
 		else
-			console.log(...args);
+			this.log=()=>{};
 	}
 
 	async load() {
 		this.config={};
+
 		if (fs.existsSync(path.join(this.cwd,"mikrokat.json"))) {
 			this.config={
 				...this.config,
@@ -48,22 +52,24 @@ export default class MikrokatProject {
 			};
 		}
 
-		if (this.main) {
-			this.entrypoint=path.resolve(this.cwd,this.main);
-		}
+		this.getEntrypoint();
+	}
 
-		else {
-			if (!this.config.main)
-				throw new DeclaredError("No entrypoint. Pass it on the command line using --main, or put it in mikrokat.json");
+	getEntrypoint() {
+		if (!this.config)
+			throw new Error("No config, can't get entrypoint");
 
-			this.entrypoint=path.resolve(this.cwd,this.config.main);
-		}
+		if (this.main)
+			return path.resolve(this.cwd,this.main);
+
+		if (!this.config.main)
+			throw new DeclaredError("No entrypoint. Pass it on the command line using --main, or put it in mikrokat.json");
+
+		return path.resolve(this.cwd,this.config.main);
 	}
 
 	async writeStub(outfile, content) {
-		if (!this.entrypoint)
-			throw new Error("Can't write stub, no entrypoint");
-
+		let entrypoint=this.getEntrypoint();
 		let outfileAbs=path.resolve(this.cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
@@ -71,7 +77,7 @@ export default class MikrokatProject {
 
 		content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
 		content=content.replaceAll("$IMPORTS",conditionalImports.getImportStub());
-		content=content.replaceAll("$ENTRYPOINT",JSON.stringify(path.relative(path.dirname(outfileAbs),this.entrypoint)));
+		content=content.replaceAll("$ENTRYPOINT",JSON.stringify(path.relative(path.dirname(outfileAbs),entrypoint)));
 
 		await fsp.writeFile(outfileAbs,content);
 	}
@@ -86,7 +92,7 @@ export default class MikrokatProject {
 
 	async serve() {
 		let conditionalImports=this.getConditionalImports();
-		let mod=await import(this.entrypoint);
+		let mod=await import(this.getEntrypoint());
 		let server=new MikrokatServer({
 			target: "node",
 			cwd: this.cwd,
@@ -133,8 +139,10 @@ export default class MikrokatProject {
 	}
 
 	async init() {
-		if (!fs.existsSync(path.join(this.cwd,"package.json")))
+		if (!fs.existsSync(path.join(this.cwd,"package.json"))) {
+			this.log("Initializing new project...");
 			await fsp.writeFile(path.join(this.cwd,"package.json"),"{}");
+		}
 
 		await this.processProjectFile("package.json","json",async pkg=>{
 			if (!pkg.name)
@@ -155,9 +163,8 @@ export default class MikrokatProject {
 			if (!pkg.dependencies)
 				pkg.dependencies={};
 
-			for (let k in this.dependencies)
-				if (!pkg.dependencies[k])
-					pkg.dependencies[k]=this.dependencies[k];
+			if (!pkg.dependencies.mikrokat)
+				pkg.dependencies.mikrokat="^"+await getPackageVersion(__dirname);
 
 			return pkg;
 		});
@@ -174,7 +181,7 @@ export default class MikrokatProject {
 
 		await this.load();
 
-		await this.processProjectFile(this.entrypoint,null,content=>{
+		await this.processProjectFile(this.getEntrypoint(),null,content=>{
 			if (!content)
 				return ENTRYPOINT_STUB
 		});
@@ -235,10 +242,8 @@ export default class MikrokatProject {
 		await fsp.mkdir(path.dirname(filenameAbs),{recursive: true});
 		await fsp.writeFile(filenameAbs,textContent);
 
-		if (["mikrokat.json","package.json"].includes(filename)) {
+		if (["mikrokat.json","package.json"].includes(filename))
 			this.config=undefined;
-			this.entrypoint=undefined;
-		}
 
 		return content;
 	}

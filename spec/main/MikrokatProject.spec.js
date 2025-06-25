@@ -22,7 +22,7 @@ describe("MikrokatProject",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		let project=new MikrokatProject({cwd: projectDir});
+		let project=new MikrokatProject({cwd: projectDir, log: false});
 		//expect(await cli.getEffectiveCwd()).toEqual(projectDir);
 
 		await project.init();
@@ -44,7 +44,7 @@ describe("MikrokatProject",()=>{
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
 
-		let project=new MikrokatProject({cwd: projectDir});
+		let project=new MikrokatProject({cwd: projectDir, log: false});
 		await project.init();
 
 		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
@@ -70,7 +70,7 @@ describe("MikrokatProject",()=>{
 		await fsp.writeFile(path.join(projectDir,"public/test.txt"),"hello world");
 		await fsp.writeFile(path.join(projectDir,"public/image.jpg"),"mock image");
 
-		let project=new MikrokatProject({cwd: projectDir, port: 3000, logger: ()=>{}});
+		let project=new MikrokatProject({cwd: projectDir, port: 3000, log: false});
 		await project.init();
 
 		await project.serve();
@@ -100,7 +100,7 @@ describe("MikrokatProject",()=>{
 			cwd: projectDir, 
 			port: 3000, 
 			dependencies: {mikrokat: "^1.2.3"},
-			logger: ()=>{}
+			log: false
 		});
 
 		await project.init();

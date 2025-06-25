@@ -1,7 +1,8 @@
-import MikrokatCli from "../../src/main/MikrokatCli.js";
+//import MikrokatCli from "../../src/main/MikrokatCli.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
+import {mikrokatInit, mikrokatBuild} from "../../src/main/mikrokat-commands.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,9 +14,11 @@ describe("CloudflareTaget",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 
-		let cli=new MikrokatCli({options: {cwd: projectDir, target: "cloudflare", quiet: true}});
+		await mikrokatInit({cwd: projectDir, target: "cloudflare", silent: true})
 
-		await cli.init();
+		/*let cli=new MikrokatCli({options: {cwd: projectDir, target: "cloudflare", quiet: true}});
+
+		await cli.init();*/
 
 		let pkg=await JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
 		expect(pkg.dependencies.wrangler).toEqual("^4.20.1");
@@ -35,10 +38,8 @@ describe("CloudflareTaget",()=>{
 			}
 		`);
 
-		let cli=new MikrokatCli({options: {cwd: projectDir, target: "cloudflare", quiet: true}});
-
-		await cli.init();
-		await cli.build();
+		await mikrokatInit({cwd: projectDir, target: "cloudflare", silent: true});
+		await mikrokatBuild({cwd: projectDir, target: "cloudflare", silent: true});
 	});
 
 })

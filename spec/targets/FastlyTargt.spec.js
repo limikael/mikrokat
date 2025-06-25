@@ -1,7 +1,7 @@
-import MikrokatCli from "../../src/main/MikrokatCli.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
+import {mikrokatInit} from "../../src/main/mikrokat-commands.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,13 +13,6 @@ describe("FastlyTaget",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 
-		let cli=new MikrokatCli({options: {cwd: projectDir, target: "fastly", quiet: true}});
-
-		await cli.init();
-
-		//await cli.init();
-
-		//let pkg=await JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
-		//expect(pkg.dependencies.wrangler).toEqual("^4.20.1");
+		await mikrokatInit({cwd: projectDir, target: "fastly", quiet: true});
 	});
 })

@@ -1,6 +1,8 @@
 import path from "node:path";
 import fs, {promises as fsp} from "node:fs";
 import mime from 'mime/lite';
+import {readPackageUp} from 'read-package-up';
+import {DeclaredError} from "../utils/js-util.js";
 
 export async function createStaticResponse({request, cwd}) {
     let url=new URL(request.url);
@@ -71,4 +73,21 @@ export function serverClosePromise(server) {
             server.closeAllConnections();
         }
     });
+}
+
+export async function getPackageVersion(cwd) {
+    let pkgInfo=await readPackageUp({cwd});
+    return pkgInfo.packageJson.version;
+}
+
+export async function getEffectiveCwd(cwd, {allowUninitialized}={}) {
+    let packageInfo=await readPackageUp({cwd: cwd});
+    if (!packageInfo) {
+        if (!allowUninitialized)
+            throw new DeclaredError("No package.json found.");
+
+        return cwd;
+    }
+
+    return path.dirname(packageInfo.path);
 }
