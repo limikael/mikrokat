@@ -6,15 +6,6 @@ import fs, {promises as fsp} from "fs";
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 describe("MikrokatProject",()=>{
-	/*it("can get the version",async ()=>{
-		let cli=new MikrokatCli();
-		//console.log(await cli.getProgramVersion());
-		let ver=await cli.getProgramVersion();
-		let verParts=ver.split(".");
-		expect(verParts[0]).toEqual("1");
-		expect(verParts[1]).toEqual("0");
-	});*/
-
 	it("can initialize a new project",async ()=>{
 		let projectDir=path.join(__dirname,"../tmp/project");
 
@@ -58,6 +49,33 @@ describe("MikrokatProject",()=>{
 
 		let fileContent=await project.getFileContent();
 		expect(fileContent).toEqual({"myfile.txt":"hello world"});
+	});
+
+	it("can generate entrypoint source",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
+			{
+				"main": ["src/onefile.js","src/anotherfile.js"],
+				"files": ["myfile.txt"],
+			}
+		`);
+
+		let project=new MikrokatProject({cwd: projectDir, log: false});
+
+		await project.load();
+
+		let imp=project.getEntrypointImports();
+		//console.log(imp);
+
+		expect(imp.imports).toEqual(`import * as __Module0 from "/home/micke/Repo/mikrokat/spec/tmp/project/src/onefile.js";
+import * as __Module1 from "/home/micke/Repo/mikrokat/spec/tmp/project/src/anotherfile.js";
+`);
+
+		expect(imp.vars).toEqual('const modules=[__Module0,__Module1];\n');
 	});
 
 	it("can serve static assets",async ()=>{

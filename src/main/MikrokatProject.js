@@ -56,32 +56,50 @@ export default class MikrokatProject {
 			};
 		}
 
-		this.getEntrypoint();
+		this.getEntrypoints();
 	}
 
-	getEntrypoint() {
+	getEntrypoints() {
 		if (!this.config)
 			throw new Error("No config, can't get entrypoint");
 
-		if (this.main)
-			return path.resolve(this.cwd,this.main);
+		let main;
 
-		if (!this.config.main)
+		if (this.main)
+			main=arrayify(this.main);
+
+		else
+			main=arrayify(this.config.main);
+
+		if (!main.length)
 			throw new DeclaredError("No entrypoint. Pass it on the command line using --main, or put it in mikrokat.json");
 
-		return path.resolve(this.cwd,this.config.main);
+		return main.map(m=>path.resolve(this.cwd,m));
+	}
+
+	getEntrypointImports() {
+		let s="";
+
+		let eps=this.getEntrypoints();
+		for (let i=0; i<eps.length; i++)
+			s+=`import * as __Module${i} from ${JSON.stringify(eps[i])};\n`
+
+		return ({
+			imports: s,
+			vars: `const modules=[${eps.map((_,i)=>`__Module${i}`).join(",")}];\n`
+		});
 	}
 
 	async writeStub(outfile, content) {
-		let entrypoint=this.getEntrypoint();
 		let outfileAbs=path.resolve(this.cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
-		let conditionalImports=this.getConditionalImports();
-
 		content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
-		content=content.replaceAll("$IMPORTS",conditionalImports.getImportStub());
-		content=content.replaceAll("$ENTRYPOINT",JSON.stringify(path.relative(path.dirname(outfileAbs),entrypoint)));
+
+		let eps=this.getEntrypointImports();
+		let cond=this.getConditionalImports().getImportStub();
+		let imports=eps.imports+cond.imports+eps.vars+cond.vars;
+		content=content.replaceAll("$IMPORTS",imports);
 
 		await fsp.writeFile(outfileAbs,content);
 	}
@@ -96,11 +114,15 @@ export default class MikrokatProject {
 
 	async serve() {
 		let conditionalImports=this.getConditionalImports();
-		let mod=await import(this.getEntrypoint());
+
+		let modules=[];
+		for (let ep of this.getEntrypoints())
+			modules.push(await import(ep));
+
 		let server=new MikrokatServer({
 			target: "node",
 			cwd: this.cwd,
-			mod: mod,
+			modules: modules,
 			imports: await conditionalImports.loadImports(),
 			fileContent: await this.getFileContent()
 		});
@@ -185,7 +207,7 @@ export default class MikrokatProject {
 
 		await this.load();
 
-		await this.processProjectFile(this.getEntrypoint(),null,content=>{
+		await this.processProjectFile(this.getEntrypoints()[0],null,content=>{
 			if (!content)
 				return ENTRYPOINT_STUB
 		});

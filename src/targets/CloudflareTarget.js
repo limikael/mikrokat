@@ -8,8 +8,7 @@ let CLOUDFLARE_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import * as mod from $ENTRYPOINT;
-import {MikrokatServer} from "mikrokat";
+import {MikrokatServer} from "mikrokat/server";
 
 $IMPORTS
 
@@ -28,7 +27,7 @@ export default {
 		if (!serverMap.get(env)) {
 			serverMap.set(env,new MikrokatServer({
 				target: "cloudflare",
-				mod, 
+				modules,
 				env,
 				imports,
 				fileContent

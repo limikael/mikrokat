@@ -21,7 +21,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let env={};
-		let server=new MikrokatServer({mod,env,imports,fileContent});
+		let server=new MikrokatServer({modules: [mod],env,imports,fileContent});
 
 		let request=new Request("http://hello.world");
 		let response=await server.handleRequest({request: request});
@@ -46,7 +46,7 @@ describe("MikrokatServer",()=>{
 		let env={};
 		let imports={};
 		let fileContent={};
-		let server=new MikrokatServer({mod,env,imports,fileContent});
+		let server=new MikrokatServer({modules: [mod],env,imports,fileContent});
 
 		let request=new Request("http://test.com/testlocal");
 		let response=await server.handleRequest({request: request});
@@ -66,7 +66,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let server=new MikrokatServer({
-			mod,
+			modules: [mod],
 			env: {},
 			fileContent: {}
 		});
@@ -105,7 +105,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let server=new MikrokatServer({
-			mod,
+			modules: [mod],
 			env: {},
 			fileContent: {}
 		});
@@ -135,7 +135,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let server=new MikrokatServer({
-			mod,
+			modules: [mod],
 			env: {},
 			fileContent: {}
 		});

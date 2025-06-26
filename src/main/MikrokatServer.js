@@ -1,8 +1,8 @@
 import MiniFs from "../utils/MiniFs.js";
 
 export default class MikrokatServer {
-	constructor({mod, env, target, cwd, imports, fileContent}) {
-		this.mod=mod;
+	constructor({modules, env, target, cwd, imports, fileContent}) {
+		this.modules=modules;
 		this.env={...env};
 		this.cwd=cwd;
 		this.target=target;
@@ -29,11 +29,21 @@ export default class MikrokatServer {
 	}
 
 	handleStart=async ()=>{
-		if (this.mod.onStart)
-			await this.mod.onStart({
-				...this.createEv(),
-				use: this.use
-			});
+		let ev={...this.createEv(), use: this.use};
+
+		for (let mod of this.modules)
+			if (mod.onStart)
+				await mod.onStart(ev);
+	}
+
+	getFetchers() {
+		let fetchers=[];
+
+		for (let mod of this.modules)
+			if (mod.onFetch)
+				fetchers.push(mod.onFetch);
+
+		return fetchers;
 	}
 
 	handleRequest=async ({request, ctx})=>{
@@ -67,7 +77,7 @@ export default class MikrokatServer {
 
 		let handlers=[
 			...this.middlewares.filter(m=>!m.fallback).map(m=>m.middleware),
-			...this.mod.onFetch?[this.mod.onFetch]:[],
+			...this.getFetchers(),
 			...this.middlewares.filter(m=>m.fallback).map(m=>m.middleware)
 		];
 

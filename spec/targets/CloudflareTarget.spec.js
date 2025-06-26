@@ -40,6 +40,10 @@ describe("CloudflareTaget",()=>{
 
 		await mikrokatInit({cwd: projectDir, target: "cloudflare", silent: true});
 		await mikrokatBuild({cwd: projectDir, target: "cloudflare", silent: true});
-	});
 
-})
+		let out=await fsp.readFile(path.join(projectDir,".target/entrypoint.cloudflare.js"),"utf8");
+		//console.log(out);
+		expect(out).toContain("__Module0");
+		expect(out).toContain("__A");
+	});
+});

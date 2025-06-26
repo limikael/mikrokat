@@ -10,7 +10,8 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": "./src/exports/default.js"
+    ".": "./src/exports/default.js",
+    "./server": "./src/exports/server.js"
   },
   "dependencies": {
     "@ltd/j-toml": "^1.38.0",
