@@ -23,11 +23,12 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, target, port, log}={}) {
+	constructor({cwd, main, target, port, log, config}={}) {
 		this.main=main;
 		this.cwd=cwd;
 		this.target=target;
 		this.port=port;
+		this.paramConfig=config;
 
 		if (!this.target)
 			this.target="node";
@@ -44,6 +45,9 @@ export default class MikrokatProject {
 
 	async load() {
 		this.config={};
+
+		if (this.paramConfig)
+			this.config={...this.config,...this.paramConfig};
 
 		if (fs.existsSync(path.join(this.cwd,"mikrokat.json"))) {
 			this.config={
