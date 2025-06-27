@@ -170,7 +170,7 @@ export default class MikrokatProject {
 
 	async init() {
 		if (!fs.existsSync(path.join(this.cwd,"package.json"))) {
-			this.log("Initializing new project...");
+			this.log("Initializing new project: "+path.basename(this.cwd));
 			await fsp.writeFile(path.join(this.cwd,"package.json"),"{}");
 		}
 
