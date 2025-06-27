@@ -21,6 +21,7 @@ describe("MikrokatProject",()=>{
 
 		expect(project.config).toEqual({
 			main: "src/main/server.js",
+			services: {}
 		});
 
 		expect(fs.existsSync(path.join(projectDir,"src/main/server.js"))).toBeTrue();
@@ -57,10 +58,22 @@ describe("MikrokatProject",()=>{
 		await fsp.rm(projectDir,{force:true, recursive: true});
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
+		await fsp.writeFile(path.join(projectDir,"myfile.txt"),"hello world");
 		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
 			{
 				"main": ["src/onefile.js","src/anotherfile.js"],
 				"files": ["myfile.txt"],
+				"imports": [
+					{"import": "hello", "from": "somepackage"}
+				],
+				"services": {
+					"DB": {
+						"type": "sqlite"
+					},
+					"DB2": {
+						"type": "sqlite"
+					}
+				}
 			}
 		`);
 
@@ -68,14 +81,11 @@ describe("MikrokatProject",()=>{
 
 		await project.load();
 
-		let imp=project.getEntrypointImports();
-		//console.log(imp);
+		let stubVars=await project.getStubVars();
+		//console.log(stubVars);
 
-		expect(imp.imports).toEqual(`import * as __Module0 from "/home/micke/Repo/mikrokat/spec/tmp/project/src/onefile.js";
-import * as __Module1 from "/home/micke/Repo/mikrokat/spec/tmp/project/src/anotherfile.js";
-`);
-
-		expect(imp.vars).toEqual('const modules=[__Module0,__Module1];\n');
+		expect(stubVars).toContain(`"myfile.txt": "hello world"`);
+		expect(stubVars).toContain(`import __hello from "somepackage";`);
 	});
 
 	it("can serve static assets",async ()=>{
@@ -154,6 +164,93 @@ import * as __Module1 from "/home/micke/Repo/mikrokat/spec/tmp/project/src/anoth
 		let responseBody=await response.text();
 
 		expect(responseBody).toEqual(`[{"val":123}]hello world`);
+
+		await project.close();
+	});
+
+	it("can compute applicable services",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
+			main: "something.js",
+			services: {
+				DB1: {type: "database"},
+				DB2: {type: "database", if: {target: "hello"}},
+				DB3: {type: "database", if: {target: "some other target"}},
+				DB4: [
+					{type: "database", if: {target: "not this one"}},
+					{type: "database", if: {target: "hello"}},
+				]
+			}
+		}));
+
+		let project=new MikrokatProject({cwd: projectDir, target: "hello"});
+		await project.load();
+
+		expect(await project.getApplicableServices()).toEqual({
+			DB1: { type: 'database' },
+			DB2: { type: 'database', if: { target: 'hello' } },
+			DB4: { type: 'database', if: { target: 'hello' } }
+		});
+
+		//console.log(await cli.getApplicableServices());
+	});
+
+	it("can reply to a request with services",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project-w-services");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+
+		let project=new MikrokatProject({cwd: projectDir, port: 3000, log: false});
+		await project.init();
+
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),`
+			{
+				"main": "src/main/server.js",
+				"services": {
+					"DB": {
+						"type": "sqlite",
+						"filename": "test.sqlite",
+					},
+					"DB2": [
+						{
+							"target": "hello",
+							"type": "sqlite",
+							"filename": "test.sqlite",
+						},
+						{
+							"type": "sqlite",
+							"filename": "test2.sqlite",
+						}
+					]
+				}
+			}
+		`);
+
+		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
+			export async function onFetch({request, env}) {
+				let res=env.DB.prepare("CREATE TABLE test (val initeger)").run();
+				let res2=env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
+				let res3=env.DB.prepare("SELECT * FROM test").all();
+
+				let res4=env.DB2.prepare("CREATE TABLE test2 (val initeger)").run();
+
+				return Response.json(res3);
+			}
+		`);
+
+		await project.load();
+		await project.serve();
+
+		let response=await fetch("http://localhost:3000");
+		let responseBody=await response.text();
+
+		expect(responseBody).toEqual(`[{"val":123}]`);
 
 		await project.close();
 	});

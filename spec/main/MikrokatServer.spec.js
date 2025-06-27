@@ -1,4 +1,10 @@
 import MikrokatServer from "../../src/main/MikrokatServer.js";
+import SqliteService from "../../src/services/SqliteService.js";
+import path from "node:path";
+import {fileURLToPath} from 'url';
+import fs, {promises as fsp} from "fs";
+
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 describe("MikrokatServer",()=>{
 	it("can handle a request",async ()=>{
@@ -143,5 +149,46 @@ describe("MikrokatServer",()=>{
 		let response=await server.handleRequest({request: new Request("http://test/handle2")});
 		expect(await response.text()).toEqual("This is an error");
 		expect(response.status).toEqual(500);
+	});
+
+	it("works with services",async ()=>{
+		let tmpDir=path.join(__dirname,"../tmp");
+
+		await fsp.rm(tmpDir,{force:true, recursive: true});
+		await fsp.mkdir(tmpDir,{recursive: true});
+
+		let mod={
+			async onFetch({request, env, fs}) {
+				env.DB.prepare("create table test (val integer)").run();
+				env.DB.prepare("insert into test (val) values (?)").run(1);
+				let res=env.DB.prepare("select * from test").all();
+				return Response.json(res);
+			}
+		};
+
+		let serviceClasses={
+			sqlite: SqliteService
+		};
+
+		let services={
+			DB: {
+				type: "sqlite",
+				filename: "test.sqlite"
+			}
+		}
+
+		let server=new MikrokatServer({
+			modules: [mod],
+			env: {},
+			fileContent: {},
+			serviceClasses,
+			services,
+			cwd: tmpDir
+		});
+
+		let response=await server.handleRequest({request: new Request("http://bla/test")});
+		let responseText=await response.text();
+		//console.log(responseText);
+		expect(responseText).toEqual(`[{"val":1}]`);
 	});
 });

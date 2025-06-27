@@ -1,4 +1,5 @@
 import path from "node:path";
+import {clauseMatch} from "./clause.js";
 
 export default class ConditionalImports {
 	constructor({cwd, imports, truth}) {
@@ -10,22 +11,11 @@ export default class ConditionalImports {
 			this.imports=[];
 	}
 
-	matchIf(clause) {
-		if (!clause)
-			return true;
-
-		for (let k in clause)
-			if (clause[k]!=this.truth[k])
-				return false;
-
-		return true;
-	}
-
 	async loadImports() {
 		let imported={};
 
 		for (let imp of this.imports) {
-			if (this.matchIf(imp.if)) {
+			if (clauseMatch(imp.if,this.truth)) {
 				let mod;
 				if (imp.from.startsWith("."))
 					mod=await import(path.resolve(this.cwd,imp.from));
@@ -58,7 +48,7 @@ export default class ConditionalImports {
 		let imports=[];
 
 		for (let imp of this.imports) {
-			if (this.matchIf(imp.if)) {
+			if (clauseMatch(imp.if,this.truth)) {
 				let modPath;
 				if (imp.from.startsWith("."))
 					modPath=JSON.stringify(path.resolve(this.cwd,imp.from));

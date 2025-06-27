@@ -13,6 +13,8 @@ import ConditionalImports from "../utils/ConditionalImports.js";
 import {serverListenPromise, serverClosePromise, createStaticResponse} from "../utils/node-util.js";
 import {fileURLToPath} from 'url';
 import {getPackageVersion} from "../utils/node-util.js";
+import {clauseMatch} from "../utils/clause.js";
+import {getUsedServiceTypes, serviceImportFiles} from "../services/services.js";
 
 let ENTRYPOINT_STUB=
 `export async function onFetch({request}) {
@@ -57,6 +59,9 @@ export default class MikrokatProject {
 			};
 		}
 
+		if (!this.config.services)
+			this.config.services={};
+
 		this.getEntrypoints();
 	}
 
@@ -91,30 +96,117 @@ export default class MikrokatProject {
 		});
 	}
 
+	getServiceImports() {
+		let applicableServices=this.getApplicableServices();
+		let serviceImports="";
+		let serviceClasses="const serviceClasses={\n";
+		let serviceTypes=getUsedServiceTypes(applicableServices);
+
+		for (let serviceType of serviceTypes) {
+			if (!serviceImportFiles[serviceType])
+				throw new DeclaredError("Unknown service type: "+serviceType);
+
+			let servicePathAbs=path.join(__dirname,"../services/",serviceImportFiles[serviceType]);
+			//let servicePathRel=path.relative(path.dirname(outfileAbs),servicePathAbs);
+			serviceImports+=`import Service_${serviceType} from ${JSON.stringify(servicePathAbs)};\n`;
+			serviceClasses+=`\"${serviceType}\": Service_${serviceType},\n`;
+		}
+
+		serviceClasses+="}\n";
+
+		return ({
+			imports: serviceImports,
+			vars: serviceClasses
+		});
+	}
+
+	async getStubVars() {
+		let applicableServices=this.getApplicableServices();
+
+		let epsImports=this.getEntrypointImports();
+		let condImports=this.getConditionalImports().getImportStub();
+		let serviceImports=this.getServiceImports();
+		let fileContent=`const fileContent=${JSON.stringify(await this.getFileContent(),null,2)};\n`;
+		let servicesContent=`const services=${JSON.stringify(applicableServices,null,2)};\n`;
+
+		let imports=
+			epsImports.imports+
+			condImports.imports+
+			serviceImports.imports+
+			epsImports.vars+
+			condImports.vars+
+			serviceImports.vars+
+			fileContent+
+			servicesContent;
+
+		return imports;
+	}
+
 	async writeStub(outfile, content) {
 		let outfileAbs=path.resolve(this.cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
-		content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
+		content=content.replaceAll("$VARS",await this.getStubVars());
+
+		/*content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
 
 		let eps=this.getEntrypointImports();
 		let cond=this.getConditionalImports().getImportStub();
 		let imports=eps.imports+cond.imports+eps.vars+cond.vars;
-		content=content.replaceAll("$IMPORTS",imports);
+		content=content.replaceAll("$IMPORTS",imports);*/
 
 		await fsp.writeFile(outfileAbs,content);
+	}
+
+	getClauseTruth() {
+		return ({target: this.target});
 	}
 
 	getConditionalImports() {
 		return new ConditionalImports({
 			cwd: this.cwd,
-			truth: {target: this.target},
+			truth: this.getClauseTruth(),
 			imports: this.config.imports
 		});
 	}
 
+	getApplicableServices() {
+		if (!this.config)
+			throw new Error("No config, project not loaded?");
+
+		let resultServices={};
+		let declaredServices=this.config.services;
+
+		for (let k in declaredServices) {
+			if (Array.isArray(declaredServices[k])) {
+				let cands=declaredServices[k];
+				let useCand=cands.find(c=>clauseMatch(c.if,this.getClauseTruth()));
+				if (useCand)
+					resultServices[k]=useCand;
+			}
+
+			else {
+				if (clauseMatch(declaredServices[k].if,this.getClauseTruth()))
+					resultServices[k]=declaredServices[k];
+			}
+		}
+
+		return resultServices;
+	}
+
 	async serve() {
 		let conditionalImports=this.getConditionalImports();
+		let applicableServices=await this.getApplicableServices();
+		let serviceTypes=getUsedServiceTypes(applicableServices);
+		let serviceClasses={};
+
+		for (let serviceType of serviceTypes) {
+			if (!serviceImportFiles[serviceType])
+				throw new DeclaredError("Unknown service type: "+serviceType);
+
+			let serviceImport=path.join(__dirname,"../services/",serviceImportFiles[serviceType])
+			serviceClasses[serviceType]=(await import(serviceImport)).default;
+		}
 
 		let modules=[];
 		for (let ep of this.getEntrypoints())
@@ -126,7 +218,9 @@ export default class MikrokatProject {
 			env: {...this.env, CWD: this.cwd},
 			modules: modules,
 			imports: await conditionalImports.loadImports(),
-			fileContent: await this.getFileContent()
+			fileContent: await this.getFileContent(),
+			services: applicableServices,
+			serviceClasses
 		});
 
 		await server.ensureStarted();

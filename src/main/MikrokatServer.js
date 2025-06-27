@@ -1,15 +1,27 @@
 import MiniFs from "../utils/MiniFs.js";
 
 export default class MikrokatServer {
-	constructor({modules, env, target, /*cwd, */imports, fileContent}) {
+	constructor({modules, env, target, cwd, imports, fileContent, services, serviceClasses}) {
 		this.modules=modules;
 		this.env={...env};
-		//this.cwd=cwd;
+		this.cwd=cwd;
 		this.target=target;
 		this.fs=new MiniFs(fileContent);
-		this.appData={}; // Should this be a thing?
+		//this.appData={}; // Should this be a thing?
 		this.imports=imports;
 		this.middlewares=[];
+
+		for (let k in services) {
+			let def=services[k];
+			let cls=serviceClasses[def.type];
+			let service=new cls({cwd, target, ...def});
+
+			if (service.api)
+				this.env[k]=service.api;
+
+			else
+				this.env[k]=service;
+		}
 	}
 
 	createEv() {
@@ -20,7 +32,8 @@ export default class MikrokatServer {
 			imports: this.imports,
 			appData: this.appData,
 			target: this.target,
-			localFetch: this.localFetch
+			localFetch: this.localFetch,
+			getServiceMeta: this.getServiceMeta
 		});
 	}
 

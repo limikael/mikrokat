@@ -10,9 +10,8 @@ let CLOUDFLARE_STUB=`
 
 import {MikrokatServer} from "mikrokat/server";
 
-$IMPORTS
+$VARS
 
-let fileContent=$FILECONTENT;
 let serverMap=new Map();
 
 export default {
@@ -30,7 +29,9 @@ export default {
 				modules,
 				env,
 				imports,
-				fileContent
+				fileContent,
+				services,
+				serviceClasses
 			}));
 		}
 
