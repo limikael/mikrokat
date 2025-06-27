@@ -1,10 +1,10 @@
 import MiniFs from "../utils/MiniFs.js";
 
 export default class MikrokatServer {
-	constructor({modules, env, target, cwd, imports, fileContent}) {
+	constructor({modules, env, target, /*cwd, */imports, fileContent}) {
 		this.modules=modules;
 		this.env={...env};
-		this.cwd=cwd;
+		//this.cwd=cwd;
 		this.target=target;
 		this.fs=new MiniFs(fileContent);
 		this.appData={}; // Should this be a thing?
@@ -36,6 +36,13 @@ export default class MikrokatServer {
 				await mod.onStart(ev);
 	}
 
+	async ensureStarted() {
+		if (!this.startPromise)
+			this.startPromise=this.handleStart();
+
+		await this.startPromise;
+	}
+
 	getFetchers() {
 		let fetchers=[];
 
@@ -50,10 +57,7 @@ export default class MikrokatServer {
 		if (!request)
 			throw new Error("handleRequest was called without a request!");
 
-		if (!this.startPromise)
-			this.startPromise=this.handleStart();
-
-		await this.startPromise;
+		await this.ensureStarted();
 
 		let localFetch=async (requestOrUrl, options={})=>{
 			if (requestOrUrl instanceof Request)

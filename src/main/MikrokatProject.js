@@ -23,12 +23,13 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, target, port, log, config}={}) {
+	constructor({cwd, main, target, port, log, config, env}={}) {
 		this.main=main;
 		this.cwd=cwd;
 		this.target=target;
 		this.port=port;
 		this.paramConfig=config;
+		this.env=env;
 
 		if (!this.target)
 			this.target="node";
@@ -122,10 +123,13 @@ export default class MikrokatProject {
 		let server=new MikrokatServer({
 			target: "node",
 			cwd: this.cwd,
+			env: {...this.env, CWD: this.cwd},
 			modules: modules,
 			imports: await conditionalImports.loadImports(),
 			fileContent: await this.getFileContent()
 		});
+
+		await server.ensureStarted();
 
 		let listener=createNodeRequestListener(async request=>{
 			let assetResponse=await createStaticResponse({
