@@ -20,15 +20,15 @@ Learn the fundamental concepts that power Mikrokat applications.
 Configure your application and deploy to different edge platforms.
 
 - [mikrokat.json Reference](./configuration/mikrokat-json.md) - Complete configuration file reference covering routing, middleware, and platform-specific settings
-- [Cloudflare Workers](./platforms/cloudflare.md) - Deploy to Cloudflare Workers with wrangler integration and environment variables
-- [Command Line Interface](./cli/overview.md) - Development server, build commands, and deployment tools
+- [Cloudflare Workers](./configuration/cloudflare.md) - Deploy to Cloudflare Workers with wrangler integration and environment variables
+- [CLI Overview](./configuration/overview.md) - Development server, build commands, and deployment tools
 
 ## 🔧 Developer Reference
 
 Detailed technical documentation for building advanced applications.
 
 - [MikrokatProject Class](./api/mikrokat-project.md) - Core project management class for programmatic control
-- [Basic HTTP Server](./examples/basic-server.md) - Simple request/response handling with routing and middleware
+- [Basic HTTP Server](./api/basic-server.md) - Simple request/response handling with routing and middleware
 
 ## 🛠️ Support & Community
 
