@@ -6,6 +6,7 @@ Welcome to the comprehensive documentation for Mikrokat, a multi-provider edge m
 
 New to Mikrokat? Start here to understand the framework and get your first application running.
 
+- [Overview](./getting-started/overview.md) - What problem Mikrokat solves and how it works
 - [Quick Start Guide](./getting-started/quick-start.md) - Get up and running in minutes with a simple example
 
 ## 📚 Core Framework
@@ -14,6 +15,9 @@ Learn the fundamental concepts that power Mikrokat applications.
 
 - [Request Handlers](./core-concepts/handlers.md) - Writing onFetch, onStart, and onSchedule handlers to process HTTP requests, startup logic, and scheduled tasks
 - [Middleware System](./core-concepts/middleware.md) - Request middleware and processing pipeline for authentication, logging, and request transformation
+- [Static Content](./core-concepts/static-content.md) - Serving static files from the public directory
+- [Config Filesystem](./core-concepts/config-filesystem.md) - Virtual filesystem for bundling configuration files and templates
+- [Conditional Imports](./core-concepts/conditional-imports.md) - Platform-specific module loading and dependency management
 
 ## ⚙️ Configuration & Deployment
 
