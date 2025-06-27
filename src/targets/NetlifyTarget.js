@@ -9,18 +9,17 @@ let NETLIFY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import * as mod from $ENTRYPOINT;
 import {MikrokatServer} from "mikrokat";
 
-$IMPORTS
-
-let fileContent=$FILECONTENT;
+$VARS
 
 let server=new MikrokatServer({
 	target: "netlify",
-	mod, 
+	modules,
 	imports,
-	fileContent
+	fileContent,
+	services,
+	serviceClasses
 });
 
 export default async function(request) {
