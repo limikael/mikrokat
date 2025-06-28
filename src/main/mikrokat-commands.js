@@ -17,6 +17,14 @@ export async function mikrokatInit(options) {
 	await project.init();
 }
 
+export async function mikrokatCreateProvisionEnv(options) {
+	options=await initOptions(options);
+	let project=new MikrokatProject(options);
+	await project.load();
+
+	return await project.createProvisionEnv();
+}
+
 export async function mikrokatServe(options) {
 	options.cwd=await getEffectiveCwd(options.cwd);
 	options=await initOptions(options);

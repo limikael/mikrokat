@@ -68,10 +68,10 @@ describe("MikrokatProject",()=>{
 				],
 				"services": {
 					"DB": {
-						"type": "sqlite"
+						"type": "better-sqlite3"
 					},
 					"DB2": {
-						"type": "sqlite"
+						"type": "better-sqlite3"
 					}
 				}
 			}
@@ -214,17 +214,17 @@ describe("MikrokatProject",()=>{
 				"main": "src/main/server.js",
 				"services": {
 					"DB": {
-						"type": "sqlite",
+						"type": "better-sqlite3",
 						"filename": "test.sqlite",
 					},
 					"DB2": [
 						{
 							"target": "hello",
-							"type": "sqlite",
+							"type": "better-sqlite3",
 							"filename": "test.sqlite",
 						},
 						{
-							"type": "sqlite",
+							"type": "better-sqlite3",
 							"filename": "test2.sqlite",
 						}
 					]

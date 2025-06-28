@@ -1,4 +1,4 @@
-import {mikrokatInit, mikrokatServe, mikrokatBuild} from "../../src/main/mikrokat-commands.js";
+import {mikrokatInit, mikrokatServe, mikrokatBuild, mikrokatCreateProvisionEnv} from "../../src/main/mikrokat-commands.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
@@ -7,6 +7,29 @@ import {getPackageVersion} from "../../src/utils/node-util.js";
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 describe("mikrokat-commands",()=>{
+	it("can create a provision env",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/project-for-provision");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
+			main: "something.js",
+			services: {
+				DB: {type: "better-sqlite3", filename: "database.sqlite", if: {target: "node"}},
+				BUCKET: {type: "node-storage", dirname: "upload"},
+				DBX: {type: "better-sqlite3", filename: "database2.sqlite", if: {target: "something-else"}},
+			}
+		}));
+
+		let env=await mikrokatCreateProvisionEnv({cwd: projectDir/*, target: "something-else"*/});
+		expect(typeof env.BUCKET.get).toEqual("function");
+
+		expect(env.getServiceMeta("DB").type).toEqual("better-sqlite3");
+		expect(env.getServiceMeta("BUCKET").type).toEqual("node-storage");
+		expect(env.getServiceMeta("DBX")).toEqual(undefined);
+	});
+
 	it("can initialize a new project",async ()=>{
 		let projectDir=path.join(__dirname,"../tmp/project");
 

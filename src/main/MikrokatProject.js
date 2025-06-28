@@ -194,6 +194,38 @@ export default class MikrokatProject {
 		return resultServices;
 	}
 
+	async createProvisionEnv() {
+		let applicableServices=await this.getApplicableServices();
+		let meta={};
+
+		let env={};
+		for (let k in applicableServices) {
+			let def=applicableServices[k];
+			let serviceImport=path.join(__dirname,"../services/",serviceImportFiles[def.type]);
+			let serviceClass=(await import(serviceImport)).default;
+
+			let service=new serviceClass({
+				cwd: this.cwd, 
+				target: this.target, 
+				...def
+			});
+
+			service.type=def.type;
+
+			if (service.api)
+				env[k]=service.api;
+
+			else
+				env[k]=service;
+
+			meta[k]=service;
+		}
+
+		env.getServiceMeta=k=>meta[k];
+
+		return env;
+	}
+
 	async serve() {
 		let conditionalImports=this.getConditionalImports();
 		let applicableServices=await this.getApplicableServices();

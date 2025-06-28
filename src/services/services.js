@@ -11,6 +11,8 @@ export function getUsedServiceTypes(services) {
 }
 
 export const serviceImportFiles={
-	"sqlite": "SqliteService.js",
-	"neon": "NeonService.js"
+	"sqlite3": "Sqlite3Service.js",
+	"neon": "NeonService.js",
+	"better-sqlite3": "BetterSqlite3Service.js",
+	"node-storage": "NodeStorageService.js"
 };

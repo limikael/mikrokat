@@ -1,5 +1,5 @@
 import MikrokatServer from "../../src/main/MikrokatServer.js";
-import SqliteService from "../../src/services/SqliteService.js";
+import BetterSqlite3Service from "../../src/services/BetterSqlite3Service.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
@@ -167,7 +167,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let serviceClasses={
-			sqlite: SqliteService
+			sqlite: BetterSqlite3Service
 		};
 
 		let services={

@@ -1,18 +1,18 @@
-import SqliteService from "../../src/services/SqliteService.js";
+import BetterSqlite3Service from "../../src/services/BetterSqlite3Service.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
-describe("SqliteService",()=>{
+describe("BetterSqlite3Service",()=>{
 	it("can service sqlite",async ()=>{
 		let tmpDir=path.join(__dirname,"../tmp");
 
 		await fsp.rm(tmpDir,{force:true, recursive: true});
 		await fsp.mkdir(tmpDir,{recursive: true});
 
-		let sqliteService=new SqliteService({
+		let sqliteService=new BetterSqlite3Service({
 			filename: path.join(tmpDir,"test.sqlite")
 		});
 

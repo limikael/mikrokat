@@ -11,7 +11,8 @@
   "license": "MIT",
   "exports": {
     ".": "./src/exports/default.js",
-    "./server": "./src/exports/server.js"
+    "./server": "./src/exports/server.js",
+    "./cloudflare-util": "./src/exports/cloudflare-util.js"
   },
   "dependencies": {
     "@ltd/j-toml": "^1.38.0",

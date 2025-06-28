@@ -9,6 +9,7 @@ let CLOUDFLARE_STUB=`
 //
 
 import {MikrokatServer} from "mikrokat/server";
+import {guessCloudflareServiceType} from "mikrokat/cloudflare-util";
 
 $VARS
 
@@ -24,6 +25,10 @@ export default {
 		}
 
 		if (!serverMap.get(env)) {
+			let serviceMeta={};
+			for (let k in env)
+				serviceMeta[k]={type: guessCloudflareServiceType(env[k])};
+
 			serverMap.set(env,new MikrokatServer({
 				target: "cloudflare",
 				modules,
@@ -31,7 +36,8 @@ export default {
 				imports,
 				fileContent,
 				services,
-				serviceClasses
+				serviceClasses,
+				serviceMeta
 			}));
 		}
 
