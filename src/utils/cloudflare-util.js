@@ -4,14 +4,14 @@ export function guessCloudflareServiceType(service) {
         return "string";
     }
 
-    if (service && typeof service.get === "function" && typeof service.put === "function") {
-        // KV bindings expose .get and .put
-        return "kv";
-    }
-
     if (service && typeof service.get === "function" && typeof service.list === "function" && typeof service.delete === "function") {
         // R2 bindings expose .get, .list, .delete
         return "r2";
+    }
+
+    if (service && typeof service.get === "function" && typeof service.put === "function") {
+        // KV bindings expose .get and .put
+        return "kv";
     }
 
     if (service && typeof service.prepare === "function") {

@@ -1,5 +1,6 @@
 import MikrokatProject from "./MikrokatProject.js";
 import {getEffectiveCwd} from "../utils/node-util.js";
+import targetClasses from "../targets/target-classes.js";
 
 async function initOptions(options) {
 	options={...options};
@@ -15,6 +16,10 @@ export async function mikrokatInit(options) {
 	let project=new MikrokatProject(options);
 
 	await project.init();
+}
+
+export function mikrokatGetTargets() {
+	return Object.keys(targetClasses)
 }
 
 export async function mikrokatCreateProvisionEnv(options) {

@@ -33,6 +33,9 @@ export default class MikrokatProject {
 		this.paramConfig=config;
 		this.env=env;
 
+		if (!this.env)
+			this.env={};
+
 		if (!this.target)
 			this.target="node";
 
@@ -128,6 +131,7 @@ export default class MikrokatProject {
 		let serviceImports=this.getServiceImports();
 		let fileContent=`const fileContent=${JSON.stringify(await this.getFileContent(),null,2)};\n`;
 		let servicesContent=`const services=${JSON.stringify(applicableServices,null,2)};\n`;
+		let envContent=`const injectEnv=${JSON.stringify(this.env,null,2)};\n`;
 
 		let imports=
 			epsImports.imports+
@@ -137,7 +141,8 @@ export default class MikrokatProject {
 			condImports.vars+
 			serviceImports.vars+
 			fileContent+
-			servicesContent;
+			servicesContent+
+			envContent;
 
 		return imports;
 	}
@@ -147,13 +152,6 @@ export default class MikrokatProject {
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
 		content=content.replaceAll("$VARS",await this.getStubVars());
-
-		/*content=content.replaceAll("$FILECONTENT",JSON.stringify(await this.getFileContent(),null,2));
-
-		let eps=this.getEntrypointImports();
-		let cond=this.getConditionalImports().getImportStub();
-		let imports=eps.imports+cond.imports+eps.vars+cond.vars;
-		content=content.replaceAll("$IMPORTS",imports);*/
 
 		await fsp.writeFile(outfileAbs,content);
 	}
@@ -285,7 +283,7 @@ export default class MikrokatProject {
 
 	async build() {
 		if (this.target=="node") {
-			this.log("Nothing to build for node.");
+			//this.log("Nothing to build for node.");
 			return;
 		}
 

@@ -32,7 +32,7 @@ export default {
 			serverMap.set(env,new MikrokatServer({
 				target: "cloudflare",
 				modules,
-				env,
+				env: {...injectEnv,...env},
 				imports,
 				fileContent,
 				services,
