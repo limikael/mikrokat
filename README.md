@@ -59,10 +59,10 @@ npm install
 yarn install
 ```
 
-### 2. Add a deployment target
+### 2. Add a deployment platform
 
 ```bash
-mikrokat init --target=cloudflare
+mikrokat init --platform=cloudflare
 ```
 
 This will:
@@ -80,16 +80,18 @@ npm run start
 To run the app locally, in a simulated edge environment, run:
 
 ```bash
-npm run dev:cloudflare
+mikrokat dev --platform=cloudflare
 ```
 
 And to the deploy the app on edge, run:
 
 ```bash
-npm run deploy:cloudflare
+mikrokat deploy --platform=cloudflare
 ```
 
 Where `cloudflare` is the deploy target. Replace with `vercel`, `netlify` or `fastly`, depending on your provider.
+
+Note, if you run `yarn` or `pnpm` rather than `npm`, you can run the above with `yarn deploy --platform=cloudflare` as well.
 
 ## Writing Your Handler
 
@@ -175,7 +177,7 @@ Mikrokat supports conditional imports declared in your `mikrokat.json` file. Thi
 resolved at buildtime and passed into your handler functions.
 
 When deploying to edge platforms like those Mikrokat targets, the code is bundled before deployment. This means you can't use dynamic `import()` 
-with runtime conditions like `if (target === 'node')`. All imports must be statically analyzable.
+with runtime conditions like `if (platform === 'node')`. All imports must be statically analyzable.
 
 Conditional imports in Mikrokat solve this by allowing you to declaratively map platform-specific modules,
 which are resolved at build time and passed into your app at runtime.
@@ -189,7 +191,7 @@ Declare conditional imports in your `mikrokat.json` file:
       "import": "Database",
       "from": "better-sqlite3",
       "if": {
-        "target": "node"
+        "platform": "node"
       }
     }
   ]
@@ -199,8 +201,8 @@ Declare conditional imports in your `mikrokat.json` file:
 The default export from `better-sqlite3` will now available in your handlers like this:
 
 ```js
-export function onFetch({env, target, imports}) {
-    if (target=="node")
+export function onFetch({env, platform, imports}) {
+    if (platform=="node")
         env.DB=new imports.Database("local.sqlite");
 }
 ```
