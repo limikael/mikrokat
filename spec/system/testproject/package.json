@@ -1,0 +1,13 @@
+{
+  "name": "testproject",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "mikrokat serve",
+    "build": "mikrokat build"
+  },
+  "dependencies": {
+    "mikrokat": "link:../..",
+    "wrangler": "^4.20.1"
+  }
+}

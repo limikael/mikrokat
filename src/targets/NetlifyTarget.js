@@ -37,15 +37,15 @@ export default class NetlifyTarget extends BaseTarget {
 	}
 
 	async build() {
-		await this.cli.processProjectFile("public/404.html",null,async text=>{
+		await this.project.processProjectFile("public/404.html",null,async text=>{
 			return "Not Found."
 		});
 
-		await this.cli.writeStub("netlify/edge-functions/entrypoint.netlify.js",NETLIFY_STUB);
+		await this.project.writeStub("netlify/edge-functions/entrypoint.netlify.js",NETLIFY_STUB);
 	}
 
 	async init() {
-		await this.cli.processProjectFile("package.json","json",async pkg=>{
+		await this.project.processProjectFile("package.json","json",async pkg=>{
 			if (!pkg.scripts) pkg.scripts={};
 			if (!pkg.scripts["dev:netlify"])
 				pkg.scripts["dev:netlify"]="TARGET=netlify mikrokat build && netlify dev --cwd=."
@@ -59,7 +59,7 @@ export default class NetlifyTarget extends BaseTarget {
 			return pkg;
 		});
 
-		await this.cli.processProjectFile("netlify.toml","toml",async netlify=>{
+		await this.project.processProjectFile("netlify.toml","toml",async netlify=>{
 			if (!netlify)
 				netlify={};
 
@@ -79,18 +79,18 @@ export default class NetlifyTarget extends BaseTarget {
 		});
 
 
-		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+		await this.project.processProjectFile(".gitignore","lines",async ignore=>{
 			if (!ignore.includes(".netlify")) ignore.push(".netlify");
 			if (!ignore.includes("netlify")) ignore.push("netlify");
 		});
 
-		this.cli.log("Netlify initialized. Start a dev server with:");
-		this.cli.log();
-		this.cli.log("  npm run dev:netlify");
-		this.cli.log();
-		this.cli.log("Deploy with:");
-		this.cli.log();
-		this.cli.log("  npm run deploy:netlify");
-		this.cli.log();
+		/*this.project.log("Netlify initialized. Start a dev server with:");
+		this.project.log();
+		this.project.log("  npm run dev:netlify");
+		this.project.log();
+		this.project.log("Deploy with:");
+		this.project.log();
+		this.project.log("  npm run deploy:netlify");
+		this.project.log();*/
 	}
 }

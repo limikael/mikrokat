@@ -37,7 +37,7 @@ describe("mikrokat-commands",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		await mikrokatInit({cwd: projectDir});
+		await mikrokatInit({cwd: projectDir, log: false});
 
 		let pkg=JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
 		expect(pkg.dependencies.mikrokat).toEqual("^"+await getPackageVersion(__dirname));
@@ -59,7 +59,7 @@ describe("mikrokat-commands",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		await mikrokatInit({cwd: projectDir});
+		await mikrokatInit({cwd: projectDir, log: false});
 
 		let server=await mikrokatServe({cwd: projectDir, port: 3000, log: false});
 

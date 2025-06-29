@@ -5,6 +5,9 @@ import targetClasses from "../targets/target-classes.js";
 async function initOptions(options) {
 	options={...options};
 
+	if (!options.port)
+		options.port=3000;
+
 	if ((options.silent || options.quiet) && !options.log)
 		options.log=false;
 
@@ -35,13 +38,13 @@ export async function mikrokatServe(options) {
 	options=await initOptions(options);
 	let project=new MikrokatProject(options);
 	await project.load();
-	await project.serve();
+	return await project.serve();
 
-	async function stop() {
+	/*async function stop() {
 		await project.close();
 	}
 
-	return {stop};
+	return {stop};*/
 }
 
 export async function mikrokatBuild(options) {

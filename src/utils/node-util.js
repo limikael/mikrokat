@@ -2,7 +2,9 @@ import path from "node:path";
 import fs, {promises as fsp} from "node:fs";
 import mime from 'mime/lite';
 import {readPackageUp} from 'read-package-up';
-import {DeclaredError} from "../utils/js-util.js";
+import { spawn } from 'node:child_process';
+import {DeclaredError, objectifyArgs, ResolvablePromise} from "../utils/js-util.js";
+import findNodeModules from "find-node-modules";
 
 export async function createStaticResponse({request, cwd}) {
     let url=new URL(request.url);
@@ -90,4 +92,91 @@ export async function getEffectiveCwd(cwd, {allowUninitialized}={}) {
     }
 
     return path.dirname(packageInfo.path);
+}
+
+export function findNodeBin(...args) {
+    let {cwd, name, includeProcessCwd}=objectifyArgs(args,["cwd","name","includeProcessCwd"]);
+
+    if (includeProcessCwd===undefined)
+        includeProcessCwd=true;
+
+    let dirs=findNodeModules({cwd: cwd, relative: false});
+    if (includeProcessCwd)
+        dirs=[...dirs,...findNodeModules({cwd: process.cwd(), relative: false})];
+
+    for (let dir of dirs) {
+        let fn=path.join(dir,".bin",name);
+        if (fs.existsSync(fn))
+            return fn;
+    }
+
+    throw new Error("Can't find binary: "+name);
+}
+
+class CommandJob {
+    constructor() {
+        this.stdoutBuffer=""
+        this.stderrBuffer="";
+        this.exitPromise=new ResolvablePromise();
+    }
+
+    async wait() {
+        return await this.exitPromise;
+    }
+
+    async stop() {
+        this.child.kill();
+        return await this.exitPromise;
+    }
+}
+
+export function startCommand(cmd, args, options = {}) {
+    let commandJob=new CommandJob();
+
+    if (options.nodeCwd)
+        cmd=findNodeBin({cwd: options.nodeCwd, name: cmd});
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, args, {
+            stdio: ['inherit', 'pipe', 'pipe'],
+            env: { ...process.env, FORCE_COLOR: '1' },
+            ...options
+        });
+
+        commandJob.child=child;
+
+        let buffer = '';
+
+        child.stdout.on('data', (data) => {
+            process.stdout.write(data);   // show live in terminal
+            commandJob.stdoutBuffer += data.toString();
+            if (options.waitForOutput && commandJob.stdoutBuffer.includes(options.waitForOutput)) {
+                resolve(commandJob);
+            }
+        });
+
+        child.stderr.on('data', (data) => {
+            process.stderr.write(data); // show errors live in terminal
+            commandJob.stderrBuffer += data.toString();
+            if (options.waitForOutput && commandJob.stderrBuffer.includes(options.waitForOutput)) {
+                resolve(commandJob);
+            }
+        });
+
+        child.on('exit', (code) => {
+            if (options.hasOwnProperty("expect") &&
+                    code!=options.expect)
+                commandJob.exitPromise.reject(new Error("Expected return code "+options.expect+", but got "+code));
+
+            else
+                commandJob.exitPromise.resolve(code);
+
+            resolve(commandJob);
+        });
+
+        child.on('error', (err) => {
+            commandJob.exitPromise.reject(err);
+            resolve(commandJob);
+        });
+    });
 }

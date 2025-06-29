@@ -1,5 +1,6 @@
 import BaseTarget from "./BaseTarget.js";
 import packageVersions from "../main/package-versions.js";
+import {startCommand, findNodeBin} from "../utils/node-util.js";
 
 let CLOUDFLARE_STUB=`
 //
@@ -53,31 +54,31 @@ export default class CloudflareTarget extends BaseTarget {
 	}
 
 	async build() {
-		await this.cli.writeStub(".target/entrypoint.cloudflare.js",CLOUDFLARE_STUB);
+		await this.project.writeStub(".target/entrypoint.cloudflare.js",CLOUDFLARE_STUB);
 	}
 
 	async init() {
-		let pkg=await this.cli.processProjectFile("package.json","json",async pkg=>{
-			if (!pkg.scripts) pkg.scripts={};
+		let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
+			/*if (!pkg.scripts) pkg.scripts={};
 			if (!pkg.scripts["dev:cloudflare"])
 				pkg.scripts["dev:cloudflare"]="wrangler dev";
 
 			if (!pkg.scripts["deploy:cloudflare"])
-				pkg.scripts["deploy:cloudflare"]="wrangler deploy";
+				pkg.scripts["deploy:cloudflare"]="wrangler deploy";*/
 
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies.wrangler="^"+packageVersions.wrangler;
 		});
 
-		await this.cli.processProjectFile("wrangler.json","json",async wrangler=>{
+		await this.project.processProjectFile("wrangler.json","json",async wrangler=>{
 			if (!wrangler) wrangler={};
 			wrangler.main=".target/entrypoint.cloudflare.js";
 
 			if (!wrangler.name)
 				wrangler.name=pkg.name;
 
-			if (!wrangler.build) wrangler.build={};
-			wrangler.build.command="TARGET=cloudflare npm run build";
+			/*if (!wrangler.build) wrangler.build={};
+			wrangler.build.command="TARGET=cloudflare npm run build";*/
 
 			if (!wrangler.compatibility_date)
 				wrangler.compatibility_date=new Date().toISOString().slice(0, 10);
@@ -91,18 +92,36 @@ export default class CloudflareTarget extends BaseTarget {
 			return wrangler;
 		});
 
-		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+		await this.project.processProjectFile(".gitignore","lines",async ignore=>{
 			if (!ignore.includes(".target")) ignore.push(".target");
 			if (!ignore.includes(".wrangler")) ignore.push(".wrangler");
 		});
 
-		this.cli.log("Cloudflare initialized. Start a dev server with:");
-		this.cli.log();
-		this.cli.log("  npm run dev:cloudflare");
-		this.cli.log();
-		this.cli.log("Deploy with:");
-		this.cli.log();
-		this.cli.log("  npm run deploy:cloudflare");
-		this.cli.log();
+		/*this.project.log("Cloudflare initialized. Start a dev server with:");
+		this.project.log();
+		this.project.log("  npm run dev:cloudflare");
+		this.project.log();
+		this.project.log("Deploy with:");
+		this.project.log();
+		this.project.log("  npm run deploy:cloudflare");
+		this.project.log();*/
+	}
+
+	async devServer() {
+		let options={
+			waitForOutput: "Ready on",
+			nodeCwd: this.project.cwd,
+			expect: 0
+		}
+
+		return await startCommand("wrangler",[
+			"dev",
+			"--cwd",this.project.cwd,
+			"--port",this.project.port
+		],options);
+	}
+
+	async deploy() {
+
 	}
 }

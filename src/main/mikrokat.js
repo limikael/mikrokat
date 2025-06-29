@@ -31,6 +31,7 @@ program.command("serve")
 	.description("Serve from this machine.")
 	.option("--main <entrypoint>","Server entrypoint.")
 	.addOption(new Option("--port <port>","Listening port.").default(3000).env("PORT"))
+	.addOption(new Option("--target <provider>","Provider to start a dev server for.").choices(Object.keys(targetClasses)).env("TARGET"))
 	.action(withProgramOptions(program,mikrokatServe));
 
 program.command("build")
@@ -41,6 +42,7 @@ program.command("build")
 
 program.command("init")
 	.description("Initialize project and/or target.")
+	.option("--no-init-project","Don't create package.json and mikrokat.json.")
 	.addOption(new Option("--target <provider>","Provider to initialize.").choices(Object.keys(targetClasses))/*.env("TARGET")*/)
 	.action(withProgramOptions(program,mikrokatInit));
 

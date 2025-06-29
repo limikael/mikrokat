@@ -1,5 +1,6 @@
 import BaseTarget from "./BaseTarget.js";
 import packageVersions from "../main/package-versions.js";
+import {startCommand, findNodeBin} from "../utils/node-util.js";
 
 let VERCEL_STUB=`
 //
@@ -39,11 +40,11 @@ export default class VercelTarget extends BaseTarget {
 	}
 
 	async build() {
-		await this.cli.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
+		await this.project.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
 	}
 
 	async init() {
-		await this.cli.processProjectFile("package.json","json",async pkg=>{
+		await this.project.processProjectFile("package.json","json",async pkg=>{
 			if (!pkg.scripts) pkg.scripts={};
 			if (!pkg.scripts["dev:vercel"])
 				pkg.scripts["dev:vercel"]="TARGET=vercel npm run build && vercel dev";
@@ -55,7 +56,7 @@ export default class VercelTarget extends BaseTarget {
 			pkg.dependencies["vercel"]="^"+packageVersions["vercel"];
 		});
 
-		await this.cli.processProjectFile("vercel.json","json",async vercel=>{
+		await this.project.processProjectFile("vercel.json","json",async vercel=>{
 			if (!vercel) vercel={};
 
 			//vercel.buildCommand="TARGET=vercel mikrokat build";
@@ -73,18 +74,29 @@ export default class VercelTarget extends BaseTarget {
 			return vercel;
 		});
 
-		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+		await this.project.processProjectFile(".gitignore","lines",async ignore=>{
 			if (!ignore.includes(".vercel")) ignore.push(".vercel");
 			if (!ignore.includes("api")) ignore.push("api");
 		});
 
-		this.cli.log("Vercel initialized. Start a dev server with:");
+		/*this.cli.log("Vercel initialized. Start a dev server with:");
 		this.cli.log();
 		this.cli.log("  npm run dev:vercel");
 		this.cli.log();
 		this.cli.log("Deploy with:");
 		this.cli.log();
 		this.cli.log("  npm run deploy:vercel");
-		this.cli.log();
+		this.cli.log();*/
+	}
+
+	async devServer() {
+		let options={
+			waitForOutput: "Ready!",
+			nodeCwd: this.project.cwd
+		}
+
+		return await startCommand("vercel",[
+			"dev",
+		],options);
 	}
 }

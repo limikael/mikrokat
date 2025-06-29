@@ -35,11 +35,11 @@ export default class FastlyTarget extends BaseTarget {
 	}
 
 	async build() {
-		await this.cli.writeStub(".target/entrypoint.fastly.js",FASTLY_STUB);
+		await this.project.writeStub(".target/entrypoint.fastly.js",FASTLY_STUB);
 	}
 
 	async init() {
-		await this.cli.processProjectFile("package.json","json",async pkg=>{
+		await this.project.processProjectFile("package.json","json",async pkg=>{
 			if (!pkg.scripts) pkg.scripts={};
 			if (!pkg.scripts["dev:fastly"])
 				pkg.scripts["dev:fastly"]="fastly compute serve";
@@ -52,9 +52,9 @@ export default class FastlyTarget extends BaseTarget {
 			pkg.dependencies["@fastly/js-compute"]="^"+packageVersions["@fastly/js-compute"];
 		});
 
-		let pkg=await this.cli.processProjectFile("package.json","json");
+		let pkg=await this.project.processProjectFile("package.json","json");
 
-		await this.cli.processProjectFile("fastly.toml","toml",async fastly=>{
+		await this.project.processProjectFile("fastly.toml","toml",async fastly=>{
 			if (!fastly)
 				fastly={};
 
@@ -70,18 +70,18 @@ export default class FastlyTarget extends BaseTarget {
 			return fastly;
 		});
 
-		await this.cli.processProjectFile(".gitignore","lines",async ignore=>{
+		await this.project.processProjectFile(".gitignore","lines",async ignore=>{
 			if (!ignore.includes("bin")) ignore.push("bin");
 			if (!ignore.includes("pkg")) ignore.push("pkg");
 		});
 
-		this.cli.log("Fastly initialized. Start a dev server with:");
+		/*this.cli.log("Fastly initialized. Start a dev server with:");
 		this.cli.log();
 		this.cli.log("  npm run dev:fastly");
 		this.cli.log();
 		this.cli.log("Deploy with:");
 		this.cli.log();
 		this.cli.log("  npm run deploy:fastly");
-		this.cli.log();
+		this.cli.log();*/
 	}
 }
