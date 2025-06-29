@@ -3,3 +3,9 @@ node_modules
 .wrangler
 mikrokat.json
 wrangler.json
+.vercel
+api
+.netlify
+netlify
+bin
+pkg

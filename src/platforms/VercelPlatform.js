@@ -1,4 +1,4 @@
-import BaseTarget from "./BaseTarget.js";
+import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
 import {startCommand, findNodeBin} from "../utils/node-util.js";
 
@@ -9,19 +9,11 @@ let VERCEL_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import * as mod from $ENTRYPOINT;
-import {MikrokatServer} from "mikrokat";
+import {MikrokatServer} from "mikrokat/server";
 
-$IMPORTS
+$VARS
 
-let fileContent=$FILECONTENT;
-
-let server=new MikrokatServer({
-	target: "vercel",
-	mod, 
-	imports,
-	fileContent
-});
+let server=new MikrokatServer(MIKROKAT_SERVER_CONF);
 
 export default async function handler(request) {
 	return await server.handleRequest({
@@ -34,7 +26,7 @@ export const config = {
 };
 `;
 
-export default class VercelTarget extends BaseTarget {
+export default class VercelPlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
 	}
@@ -45,12 +37,8 @@ export default class VercelTarget extends BaseTarget {
 
 	async init() {
 		await this.project.processProjectFile("package.json","json",async pkg=>{
-			if (!pkg.scripts) pkg.scripts={};
-			if (!pkg.scripts["dev:vercel"])
-				pkg.scripts["dev:vercel"]="TARGET=vercel npm run build && vercel dev";
-
-			if (!pkg.scripts["deploy:vercel"])
-				pkg.scripts["deploy:vercel"]="TARGET=vercel npm run build && vercel deploy";
+			if (!pkg)
+				throw new Error("No package.json");
 
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies["vercel"]="^"+packageVersions["vercel"];
@@ -59,7 +47,7 @@ export default class VercelTarget extends BaseTarget {
 		await this.project.processProjectFile("vercel.json","json",async vercel=>{
 			if (!vercel) vercel={};
 
-			//vercel.buildCommand="TARGET=vercel mikrokat build";
+			//vercel.buildCommand="PLATFORM=vercel mikrokat build";
 			vercel.buildCommand="";
 
 			if (!vercel.routes) {
@@ -92,11 +80,14 @@ export default class VercelTarget extends BaseTarget {
 	async devServer() {
 		let options={
 			waitForOutput: "Ready!",
-			nodeCwd: this.project.cwd
+			nodeCwd: this.project.cwd,
+			expect: 0
 		}
 
 		return await startCommand("vercel",[
+			"--cwd",this.project.cwd,
 			"dev",
+			"--listen","0.0.0.0:"+this.project.port
 		],options);
 	}
 }

@@ -1,0 +1,7 @@
+
+name = 'testproject'
+language = 'javascript'
+manifest_version = 3.0
+
+[scripts]
+build = 'npx --no-install js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm'

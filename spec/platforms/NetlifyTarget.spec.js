@@ -13,7 +13,7 @@ describe("NetlifyTaget",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 
-		await mikrokatInit({cwd: projectDir, target: "netlify", quiet: true});
+		await mikrokatInit({cwd: projectDir, platform: "netlify", quiet: true});
 	});
 
 	it("netlify can be built",async ()=>{
@@ -23,7 +23,7 @@ describe("NetlifyTaget",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 
-		await mikrokatInit({cwd: projectDir, target: "netlify", quiet: true});
-		await mikrokatBuild({cwd: projectDir, target: "netlify", quiet: true});
+		await mikrokatInit({cwd: projectDir, platform: "netlify", quiet: true});
+		await mikrokatBuild({cwd: projectDir, platform: "netlify", quiet: true});
 	});
 })

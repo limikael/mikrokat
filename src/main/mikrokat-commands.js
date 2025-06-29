@@ -1,6 +1,6 @@
 import MikrokatProject from "./MikrokatProject.js";
 import {getEffectiveCwd} from "../utils/node-util.js";
-import targetClasses from "../targets/target-classes.js";
+import platformClasses from "../platforms/platform-classes.js";
 
 async function initOptions(options) {
 	options={...options};
@@ -21,8 +21,8 @@ export async function mikrokatInit(options) {
 	await project.init();
 }
 
-export function mikrokatGetTargets() {
-	return Object.keys(targetClasses)
+export function mikrokatGetPlatforms() {
+	return Object.keys(platformClasses)
 }
 
 export async function mikrokatCreateProvisionEnv(options) {
@@ -36,15 +36,10 @@ export async function mikrokatCreateProvisionEnv(options) {
 export async function mikrokatServe(options) {
 	options.cwd=await getEffectiveCwd(options.cwd);
 	options=await initOptions(options);
+
 	let project=new MikrokatProject(options);
 	await project.load();
 	return await project.serve();
-
-	/*async function stop() {
-		await project.close();
-	}
-
-	return {stop};*/
 }
 
 export async function mikrokatBuild(options) {

@@ -47,6 +47,6 @@ import {test as __test,test2 as __test2} from "/home/micke/Repo/mikrokat/spec/ut
 import {test as __testAlias} from "/home/micke/Repo/mikrokat/spec/utils/ImportA.js";
 import {test as __testAlias1} from "/home/micke/Repo/mikrokat/spec/utils/ImportA.js";
 `);
-		expect(stub.vars).toEqual(`const imports={A: __A, test: __test, test2: __test2, testAlias: __testAlias, testAlias1: __testAlias1};\n`);
+		expect(stub.vars).toEqual(`imports: {A: __A, test: __test, test2: __test2, testAlias: __testAlias, testAlias1: __testAlias1},\n`);
 	});
 });

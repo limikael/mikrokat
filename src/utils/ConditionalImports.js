@@ -79,9 +79,9 @@ export default class ConditionalImports {
 
 		let vars="";
 
-		vars+="const imports={";
+		vars+="imports: {";
 		vars+=imports.map(i=>`${i}: ${prefix}${i}`).join(", ");
-		vars+="};\n";
+		vars+="},\n";
 
 		return ({
 			imports: stub,

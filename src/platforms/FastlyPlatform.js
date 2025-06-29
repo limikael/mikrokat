@@ -1,6 +1,7 @@
-import BaseTarget from "./BaseTarget.js";
+import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
+import {startCommand, findNodeBin} from "../utils/node-util.js";
 
 let FASTLY_STUB=`
 //
@@ -9,18 +10,11 @@ let FASTLY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat";
+import {MikrokatServer} from "mikrokat/server";
 
 $VARS
 
-let server=new MikrokatServer({
-	target: "fastly",
-	modules, 
-	imports,
-	fileContent,
-	services,
-	serviceClasses
-});
+let server=new MikrokatServer(MIKROKAT_SERVER_CONF);
 
 addEventListener("fetch", ev=>{
 	ev.respondWith(server.handleRequest({
@@ -29,7 +23,7 @@ addEventListener("fetch", ev=>{
 });
 `;
 
-export default class FastlyTarget extends BaseTarget {
+export default class FastlyPlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
 	}
@@ -40,12 +34,8 @@ export default class FastlyTarget extends BaseTarget {
 
 	async init() {
 		await this.project.processProjectFile("package.json","json",async pkg=>{
-			if (!pkg.scripts) pkg.scripts={};
-			if (!pkg.scripts["dev:fastly"])
-				pkg.scripts["dev:fastly"]="fastly compute serve";
-
-			if (!pkg.scripts["deploy:fastly"])
-				pkg.scripts["deploy:fastly"]="fastly compute publish";
+			if (!pkg)
+				throw new Error("No package.json");
 
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies["@fastly/cli"]="^"+packageVersions["@fastly/cli"];
@@ -65,7 +55,7 @@ export default class FastlyTarget extends BaseTarget {
 				fastly.manifest_version=3;
 
 			if (!fastly.scripts) fastly.scripts=Section({});
-			fastly.scripts.build="TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
+			fastly.scripts.build="npx --no-install js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm"
 
 			return fastly;
 		});
@@ -74,14 +64,19 @@ export default class FastlyTarget extends BaseTarget {
 			if (!ignore.includes("bin")) ignore.push("bin");
 			if (!ignore.includes("pkg")) ignore.push("pkg");
 		});
+	}
 
-		/*this.cli.log("Fastly initialized. Start a dev server with:");
-		this.cli.log();
-		this.cli.log("  npm run dev:fastly");
-		this.cli.log();
-		this.cli.log("Deploy with:");
-		this.cli.log();
-		this.cli.log("  npm run deploy:fastly");
-		this.cli.log();*/
+	async devServer() {
+		let options={
+			waitForOutput: "INFO Listening on",
+			nodeCwd: this.project.cwd,
+			expect: 0
+		}
+
+		return await startCommand("fastly",[
+			"compute","serve",
+			"--dir",this.project.cwd,
+			"--addr","0.0.0.0:"+this.project.port
+		],options);
 	}
 }

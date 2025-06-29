@@ -1,3 +1,3 @@
-export async function onFetch({request}) {
-    return new Response("The project starts here");
+export async function onFetch({request, platform}) {
+    return new Response("Hello from platform: "+platform);
 }

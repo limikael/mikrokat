@@ -27,7 +27,7 @@ describe("MikrokatServer",()=>{
 		};
 
 		let env={};
-		let server=new MikrokatServer({modules: [mod],env,imports,fileContent});
+		let server=new MikrokatServer({modules: [mod],env,imports,fileContent,platform:"node"});
 
 		let request=new Request("http://hello.world");
 		let response=await server.handleRequest({request: request});
@@ -52,7 +52,7 @@ describe("MikrokatServer",()=>{
 		let env={};
 		let imports={};
 		let fileContent={};
-		let server=new MikrokatServer({modules: [mod],env,imports,fileContent});
+		let server=new MikrokatServer({modules: [mod],env,imports,fileContent,platform:"node"});
 
 		let request=new Request("http://test.com/testlocal");
 		let response=await server.handleRequest({request: request});
@@ -74,7 +74,8 @@ describe("MikrokatServer",()=>{
 		let server=new MikrokatServer({
 			modules: [mod],
 			env: {},
-			fileContent: {}
+			fileContent: {},
+			platform:"node"
 		});
 
 		let response=await server.handleRequest({request: new Request("http://test")});
@@ -113,7 +114,8 @@ describe("MikrokatServer",()=>{
 		let server=new MikrokatServer({
 			modules: [mod],
 			env: {},
-			fileContent: {}
+			fileContent: {},
+			platform:"node"
 		});
 
 		let response1=await server.handleRequest({request: new Request("http://test/handle2")});
@@ -143,7 +145,8 @@ describe("MikrokatServer",()=>{
 		let server=new MikrokatServer({
 			modules: [mod],
 			env: {},
-			fileContent: {}
+			fileContent: {},
+			platform:"node"
 		});
 
 		let response=await server.handleRequest({request: new Request("http://test/handle2")});
@@ -183,7 +186,8 @@ describe("MikrokatServer",()=>{
 			fileContent: {},
 			serviceClasses,
 			services,
-			cwd: tmpDir
+			cwd: tmpDir,
+			platform:"node"
 		});
 
 		let response=await server.handleRequest({request: new Request("http://bla/test")});

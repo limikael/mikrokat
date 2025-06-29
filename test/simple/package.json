@@ -2,15 +2,7 @@
   "name": "simple",
   "scripts": {
     "start": "mikrokat serve",
-    "build": "mikrokat build",
-    "dev:cloudflare": "wrangler dev",
-    "deploy:cloudflare": "wrangler deploy",
-    "dev:fastly": "fastly compute serve",
-    "deploy:fastly": "fastly compute publish",
-    "dev:netlify": "TARGET=netlify mikrokat build && netlify dev --cwd=.",
-    "deploy:netlify": "TARGET=netlify mikrokat build && netlify deploy --cwd=.",
-    "dev:vercel": "TARGET=vercel npm run build && vercel dev",
-    "deploy:vercel": "TARGET=vercel npm run build && vercel deploy"
+    "build": "mikrokat build"
   },
   "dependencies": {
     "mikrokat": "link:../..",

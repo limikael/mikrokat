@@ -1,6 +1,7 @@
-import BaseTarget from "./BaseTarget.js";
+import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
+import {startCommand} from "../utils/node-util.js";
 
 let NETLIFY_STUB=`
 //
@@ -9,18 +10,11 @@ let NETLIFY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat";
+import {MikrokatServer} from "mikrokat/server";
 
 $VARS
 
-let server=new MikrokatServer({
-	target: "netlify",
-	modules,
-	imports,
-	fileContent,
-	services,
-	serviceClasses
-});
+let server=new MikrokatServer(MIKROKAT_SERVER_CONF);
 
 export default async function(request) {
 	return await server.handleRequest({
@@ -31,7 +25,7 @@ export default async function(request) {
 export const config = { path: "/*" };
 `;
 
-export default class NetlifyTarget extends BaseTarget {
+export default class NetlifyPlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
 	}
@@ -46,12 +40,8 @@ export default class NetlifyTarget extends BaseTarget {
 
 	async init() {
 		await this.project.processProjectFile("package.json","json",async pkg=>{
-			if (!pkg.scripts) pkg.scripts={};
-			if (!pkg.scripts["dev:netlify"])
-				pkg.scripts["dev:netlify"]="TARGET=netlify mikrokat build && netlify dev --cwd=."
-
-			if (!pkg.scripts["deploy:netlify"])
-				pkg.scripts["deploy:netlify"]="TARGET=netlify mikrokat build && netlify deploy --cwd=."
+			if (!pkg)
+				throw new Error("No package.json");
 
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies["netlify-cli"]="^"+packageVersions["netlify-cli"];
@@ -92,5 +82,20 @@ export default class NetlifyTarget extends BaseTarget {
 		this.project.log();
 		this.project.log("  npm run deploy:netlify");
 		this.project.log();*/
+	}
+
+	async devServer() {
+		let options={
+			waitForOutput: "Local dev server ready",
+			nodeCwd: this.project.cwd,
+			expect: 0
+		}
+
+		return await startCommand("netlify",[
+			"dev",
+			"--cwd",this.project.cwd,
+			"--no-open",
+			"--port",this.project.port
+		],options);
 	}
 }

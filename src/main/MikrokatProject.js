@@ -5,7 +5,7 @@ import {safeResolveExports, pkgSetExport} from "../utils/npm-util.js";
 import {DeclaredError, arrayify} from "../utils/js-util.js";
 import path from "node:path";
 import http from "node:http";
-import targetClasses from "../targets/target-classes.js";
+import platformClasses from "../platforms/platform-classes.js";
 import fs, {promises as fsp} from "fs";
 import JSON5 from "json5";
 import ConditionalImports from "../utils/ConditionalImports.js";
@@ -25,20 +25,25 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, target, port, log, config, env, initProject}={}) {
+	constructor({cwd, main, platform, port, log, config, env, initProject, target}={}) {
+		if (target)
+			throw new Error("It is not called target, it is called platform");
+
 		this.main=main;
 		this.cwd=cwd;
-		this.target=target;
+		this.platform=platform;
 		this.port=port;
 		this.paramConfig=config;
 		this.env=env;
 		this.initProject=initProject;
+		if (this.initProject===undefined)
+			this.initProject=true;
 
 		if (!this.env)
 			this.env={};
 
-		if (!this.target)
-			this.target="node";
+		if (!this.platform)
+			this.platform="node";
 
 		if (typeof log=="function")
 			this.log=log;
@@ -96,14 +101,14 @@ export default class MikrokatProject {
 
 		return ({
 			imports: s,
-			vars: `const modules=[${eps.map((_,i)=>`__Module${i}`).join(",")}];\n`
+			vars: `modules: [${eps.map((_,i)=>`__Module${i}`).join(",")}],\n`
 		});
 	}
 
 	getServiceImports() {
 		let applicableServices=this.getApplicableServices();
 		let serviceImports="";
-		let serviceClasses="const serviceClasses={\n";
+		let serviceClasses="serviceClasses: {\n";
 		let serviceTypes=getUsedServiceTypes(applicableServices);
 
 		for (let serviceType of serviceTypes) {
@@ -116,7 +121,7 @@ export default class MikrokatProject {
 			serviceClasses+=`\"${serviceType}\": Service_${serviceType},\n`;
 		}
 
-		serviceClasses+="}\n";
+		serviceClasses+="},\n";
 
 		return ({
 			imports: serviceImports,
@@ -130,20 +135,23 @@ export default class MikrokatProject {
 		let epsImports=this.getEntrypointImports();
 		let condImports=this.getConditionalImports().getImportStub();
 		let serviceImports=this.getServiceImports();
-		let fileContent=`const fileContent=${JSON.stringify(await this.getFileContent(),null,2)};\n`;
-		let servicesContent=`const services=${JSON.stringify(applicableServices,null,2)};\n`;
-		let envContent=`const injectEnv=${JSON.stringify(this.env,null,2)};\n`;
+		let fileContent=`fileContent: ${JSON.stringify(await this.getFileContent(),null,2)},\n`;
+		let servicesContent=`services: ${JSON.stringify(applicableServices,null,2)},\n`;
+		let envContent=`env: ${JSON.stringify(this.env,null,2)},\n`;
 
 		let imports=
 			epsImports.imports+
 			condImports.imports+
 			serviceImports.imports+
+			"const MIKROKAT_SERVER_CONF={\n"+
+			`platform: "${this.platform}",\n`+
 			epsImports.vars+
 			condImports.vars+
 			serviceImports.vars+
 			fileContent+
 			servicesContent+
-			envContent;
+			envContent+
+			"};\n";
 
 		return imports;
 	}
@@ -158,7 +166,7 @@ export default class MikrokatProject {
 	}
 
 	getClauseTruth() {
-		return ({target: this.target});
+		return ({platform: this.platform});
 	}
 
 	getConditionalImports() {
@@ -205,7 +213,7 @@ export default class MikrokatProject {
 
 			let service=new serviceClass({
 				cwd: this.cwd, 
-				target: this.target, 
+				platform: this.platform, 
 				...def
 			});
 
@@ -244,7 +252,7 @@ export default class MikrokatProject {
 			modules.push(await import(ep));
 
 		let server=new MikrokatServer({
-			target: "node",
+			platform: "node",
 			cwd: this.cwd,
 			env: {...this.env, CWD: this.cwd},
 			modules: modules,
@@ -277,15 +285,15 @@ export default class MikrokatProject {
 	}
 
 	async serve() {
-		if (this.target=="node") {
+		if (this.platform=="node") {
 			return await this.serveNode();
 		}
 
 		else {
 			await this.build();
 
-			let target=new targetClasses[this.target]({project: this});
-			let server=await target.devServer();
+			let platform=new platformClasses[this.platform]({project: this});
+			let server=await platform.devServer();
 
 			return server;
 		}
@@ -304,13 +312,13 @@ export default class MikrokatProject {
 	}
 
 	async build() {
-		if (this.target=="node") {
+		if (this.platform=="node") {
 			//this.log("Nothing to build for node.");
 			return;
 		}
 
-		let target=new targetClasses[this.target]({project: this});
-		await target.build();
+		let platform=new platformClasses[this.platform]({project: this});
+		await platform.build();
 	}
 
 	async init() {
@@ -378,16 +386,16 @@ export default class MikrokatProject {
 
 		let programName=path.basename(process.argv[1]);
 
-		if (this.target && this.target!="node") {
-			let target=new targetClasses[this.target]({project: this});
-			await target.init();
-			this.log(`Target ${this.target} initialized. Start a dev server with:`);
+		if (this.platform && this.platform!="node") {
+			let platform=new platformClasses[this.platform]({project: this});
+			await platform.init();
+			this.log(`Platform ${this.platform} initialized. Start a dev server with:`);
 			this.log("");
-			this.log(`  ${programName} dev --target=${this.target}`);
+			this.log(`  ${programName} dev --platform=${this.platform}`);
 			this.log("");
 			this.log(`Deploy with:`);
 			this.log("");
-			this.log(`  ${programName} deploy --target=${this.target}`);
+			this.log(`  ${programName} deploy --platform=${this.platform}`);
 			this.log("");
 		}
 

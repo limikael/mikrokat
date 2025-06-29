@@ -2,6 +2,7 @@
 name = 'simple'
 language = 'javascript'
 manifest_version = 3.0
+input = "/home/micke/Repo/mikrokat/test/simple/target/entrypoint.fastly.js"
 
-[scripts]
-build = 'TARGET=fastly npm run build && js-compute-runtime .target/entrypoint.fastly.js ./bin/main.wasm'
+[setup]
+input = "/home/micke/Repo/mikrokat/test/simple/target/entrypoint.fastly.js"

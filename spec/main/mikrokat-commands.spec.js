@@ -16,9 +16,9 @@ describe("mikrokat-commands",()=>{
 		await fsp.writeFile(path.join(projectDir,"mikrokat.json"),JSON.stringify({
 			main: "something.js",
 			services: {
-				DB: {type: "better-sqlite3", filename: "database.sqlite", if: {target: "node"}},
+				DB: {type: "better-sqlite3", filename: "database.sqlite", if: {platform: "node"}},
 				BUCKET: {type: "node-storage", dirname: "upload"},
-				DBX: {type: "better-sqlite3", filename: "database2.sqlite", if: {target: "something-else"}},
+				DBX: {type: "better-sqlite3", filename: "database2.sqlite", if: {platform: "something-else"}},
 			}
 		}));
 
@@ -37,7 +37,7 @@ describe("mikrokat-commands",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		await mikrokatInit({cwd: projectDir, log: false});
+		await mikrokatInit({cwd: projectDir, log: false, initProject: true});
 
 		let pkg=JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
 		expect(pkg.dependencies.mikrokat).toEqual("^"+await getPackageVersion(__dirname));
@@ -78,8 +78,8 @@ describe("mikrokat-commands",()=>{
 		await fsp.mkdir(projectDir,{recursive: true});
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
 
-		await mikrokatInit({cwd: projectDir, target: "cloudflare", log: false});
-		await mikrokatBuild({cwd: projectDir, target: "cloudflare", log: false});
+		await mikrokatInit({cwd: projectDir, platform: "cloudflare", log: false});
+		await mikrokatBuild({cwd: projectDir, platform: "cloudflare", log: false});
 
 		expect(fs.existsSync(path.join(projectDir,".target/entrypoint.cloudflare.js")));
 	});

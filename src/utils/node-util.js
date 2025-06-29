@@ -5,6 +5,7 @@ import {readPackageUp} from 'read-package-up';
 import { spawn } from 'node:child_process';
 import {DeclaredError, objectifyArgs, ResolvablePromise} from "../utils/js-util.js";
 import findNodeModules from "find-node-modules";
+import treeKill from "tree-kill";
 
 export async function createStaticResponse({request, cwd}) {
     let url=new URL(request.url);
@@ -125,7 +126,18 @@ class CommandJob {
     }
 
     async stop() {
-        this.child.kill();
+        //this.child.kill("SIGINT");
+
+        await new Promise((resolve,reject)=>{
+            treeKill(this.child.pid,"SIGTERM",err=>{
+                if (err)
+                    reject(err);
+
+                else
+                    resolve();
+            });
+        })
+
         return await this.exitPromise;
     }
 }
@@ -138,6 +150,7 @@ export function startCommand(cmd, args, options = {}) {
 
     return new Promise((resolve, reject) => {
         const child = spawn(cmd, args, {
+            //stdio: "inherit",
             stdio: ['inherit', 'pipe', 'pipe'],
             env: { ...process.env, FORCE_COLOR: '1' },
             ...options
@@ -163,10 +176,13 @@ export function startCommand(cmd, args, options = {}) {
             }
         });
 
-        child.on('exit', (code) => {
-            if (options.hasOwnProperty("expect") &&
+        child.on('exit', (code, signal) => {
+            if (signal=="SIGTERM" || signal=="SIGINT")
+                commandJob.exitPromise.resolve();
+
+            else if (options.hasOwnProperty("expect") &&
                     code!=options.expect)
-                commandJob.exitPromise.reject(new Error("Expected return code "+options.expect+", but got "+code));
+                commandJob.exitPromise.reject(new DeclaredError("Expected return code "+options.expect+", but got "+code+" signal="+signal));
 
             else
                 commandJob.exitPromise.resolve(code);

@@ -5,7 +5,7 @@ import path from "node:path";
 import http from "http";
 import fs from "fs";
 import {fileURLToPath} from 'node:url';
-import targetClasses from "../targets/target-classes.js";
+import platformClasses from "../platforms/platform-classes.js";
 import {getPackageVersion} from "../utils/node-util.js";
 import {mikrokatInit, mikrokatBuild, mikrokatServe} from "./mikrokat-commands.js";
 import {withProgramOptions} from "../utils/commander-util.js"
@@ -31,19 +31,19 @@ program.command("serve")
 	.description("Serve from this machine.")
 	.option("--main <entrypoint>","Server entrypoint.")
 	.addOption(new Option("--port <port>","Listening port.").default(3000).env("PORT"))
-	.addOption(new Option("--target <provider>","Provider to start a dev server for.").choices(Object.keys(targetClasses)).env("TARGET"))
+	.addOption(new Option("--platform <provider>","Provider to start a dev server for.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatServe));
 
 program.command("build")
 	.description("Build entrypoint stub for provider.")
 	.option("--main <entrypoint>","Server entrypoint.")
-	.addOption(new Option("--target <provider>","Provider to build for.").choices(Object.keys(targetClasses)).env("TARGET"))
+	.addOption(new Option("--platform <provider>","Provider to build for.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatBuild));
 
 program.command("init")
-	.description("Initialize project and/or target.")
+	.description("Initialize project and/or platform.")
 	.option("--no-init-project","Don't create package.json and mikrokat.json.")
-	.addOption(new Option("--target <provider>","Provider to initialize.").choices(Object.keys(targetClasses))/*.env("TARGET")*/)
+	.addOption(new Option("--platform <provider>","Provider to initialize.").choices(Object.keys(platformClasses))/*.env("PLATFORM")*/)
 	.action(withProgramOptions(program,mikrokatInit));
 
 try {

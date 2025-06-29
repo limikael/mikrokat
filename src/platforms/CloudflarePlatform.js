@@ -1,4 +1,4 @@
-import BaseTarget from "./BaseTarget.js";
+import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
 import {startCommand, findNodeBin} from "../utils/node-util.js";
 
@@ -30,16 +30,11 @@ export default {
 			for (let k in env)
 				serviceMeta[k]={type: guessCloudflareServiceType(env[k])};
 
-			serverMap.set(env,new MikrokatServer({
-				target: "cloudflare",
-				modules,
-				env: {...injectEnv,...env},
-				imports,
-				fileContent,
-				services,
-				serviceClasses,
-				serviceMeta
-			}));
+			let envConf={...MIKROKAT_SERVER_CONF};
+			envConf.env={...envConf.env,...env};
+			envConf.serviceMeta=serviceMeta;
+
+			serverMap.set(env,new MikrokatServer(envConf));
 		}
 
 		let server=serverMap.get(env);
@@ -48,7 +43,7 @@ export default {
 }
 `;
 
-export default class CloudflareTarget extends BaseTarget {
+export default class CloudflarePlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
 	}
@@ -78,7 +73,7 @@ export default class CloudflareTarget extends BaseTarget {
 				wrangler.name=pkg.name;
 
 			/*if (!wrangler.build) wrangler.build={};
-			wrangler.build.command="TARGET=cloudflare npm run build";*/
+			wrangler.build.command="PLATFORM=cloudflare npm run build";*/
 
 			if (!wrangler.compatibility_date)
 				wrangler.compatibility_date=new Date().toISOString().slice(0, 10);
@@ -116,6 +111,7 @@ export default class CloudflareTarget extends BaseTarget {
 
 		return await startCommand("wrangler",[
 			"dev",
+			"--no-live-reload",
 			"--cwd",this.project.cwd,
 			"--port",this.project.port
 		],options);

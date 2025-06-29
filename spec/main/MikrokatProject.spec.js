@@ -82,7 +82,7 @@ describe("MikrokatProject",()=>{
 		await project.load();
 
 		let stubVars=await project.getStubVars();
-		//console.log(stubVars);
+		console.log(stubVars);
 
 		expect(stubVars).toContain(`"myfile.txt": "hello world"`);
 		expect(stubVars).toContain(`import __hello from "somepackage";`);
@@ -138,7 +138,7 @@ describe("MikrokatProject",()=>{
 				"main": "src/main/server.js",
 				"files": "myfile.txt",
 				"imports": [
-					{"import": "Database", "from": "better-sqlite3", "if": {"target": "node"}}
+					{"import": "Database", "from": "better-sqlite3", "if": {"platform": "node"}}
 				]
 			}
 		`);
@@ -178,22 +178,22 @@ describe("MikrokatProject",()=>{
 			main: "something.js",
 			services: {
 				DB1: {type: "database"},
-				DB2: {type: "database", if: {target: "hello"}},
-				DB3: {type: "database", if: {target: "some other target"}},
+				DB2: {type: "database", if: {platform: "hello"}},
+				DB3: {type: "database", if: {platform: "some other target"}},
 				DB4: [
-					{type: "database", if: {target: "not this one"}},
-					{type: "database", if: {target: "hello"}},
+					{type: "database", if: {platform: "not this one"}},
+					{type: "database", if: {platform: "hello"}},
 				]
 			}
 		}));
 
-		let project=new MikrokatProject({cwd: projectDir, target: "hello"});
+		let project=new MikrokatProject({cwd: projectDir, platform: "hello"});
 		await project.load();
 
 		expect(await project.getApplicableServices()).toEqual({
 			DB1: { type: 'database' },
-			DB2: { type: 'database', if: { target: 'hello' } },
-			DB4: { type: 'database', if: { target: 'hello' } }
+			DB2: { type: 'database', if: { platform: 'hello' } },
+			DB4: { type: 'database', if: { platform: 'hello' } }
 		});
 
 		//console.log(await cli.getApplicableServices());

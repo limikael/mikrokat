@@ -1,11 +1,14 @@
 import MiniFs from "../utils/MiniFs.js";
 
 export default class MikrokatServer {
-	constructor({modules, env, target, cwd, imports, fileContent, services, serviceClasses, serviceMeta}) {
+	constructor({modules, env, platform, cwd, imports, fileContent, services, serviceClasses, serviceMeta}) {
+		if (!platform)
+			throw new Error("Got no platform for server!");
+
 		this.modules=modules;
 		this.env={...env};
 		this.cwd=cwd;
-		this.target=target;
+		this.platform=platform;
 		this.fs=new MiniFs(fileContent);
 		//this.appData={}; // Should this be a thing?
 		this.imports=imports;
@@ -17,7 +20,7 @@ export default class MikrokatServer {
 		for (let k in services) {
 			let def=services[k];
 			let cls=serviceClasses[def.type];
-			let service=new cls({cwd, target, ...def});
+			let service=new cls({cwd, platform, ...def});
 
 			service.type=def.type;
 
@@ -47,7 +50,7 @@ export default class MikrokatServer {
 			fs: this.fs,
 			imports: this.imports,
 			appData: this.appData,
-			target: this.target,
+			platform: this.platform,
 			localFetch: this.localFetch,
 			getServiceMeta: this.getServiceMeta
 		});

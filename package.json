@@ -23,13 +23,18 @@
     "mime": "^4.0.7",
     "read-package-up": "^11.0.0",
     "resolve.exports": "^2.0.3",
-    "serve-fetch": "^1.0.4"
+    "serve-fetch": "^1.0.4",
+    "tree-kill": "^1.2.2"
   },
   "devDependencies": {
-    "mikrokat":"link:.",
+    "@fastly/cli": "^11.3.0",
+    "@fastly/js-compute": "^3.34.0",
     "@neondatabase/serverless": "^1.0.1",
     "better-sqlite3": "^11.10.0",
     "jasmine": "^5.8.0",
+    "mikrokat": "link:.",
+    "netlify-cli": "^22.2.1",
+    "vercel": "^44.2.7",
     "wrangler": "^4.22.0"
   }
 }
