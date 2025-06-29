@@ -16,7 +16,9 @@ Mikrokat compiles a universal request handler into platform-specific edge runtim
 - Multi-platform build targets, currently supports: Cloudflare, Vercel, Fastly and Netlify.
 - Unified API handler - Write a single `onFetch` handler that works across platforms.
 
-One way of unserstanding mikrokat is that is it similar to [serverless](https://www.serverless.com/), but for [Edge Computing](https://en.wikipedia.org/wiki/Edge_computing).
+One way of unserstanding Mikrokat is that is it similar to [serverless](https://www.serverless.com/), but for [Edge Computing](https://en.wikipedia.org/wiki/Edge_computing).
+
+Another way to understand Mikrokat is that it is like Docker for edge platforms. It provides a consistent way to package, build, and deploy edge applications across Cloudflare, Vercel, Fastly, and Netlify while orchestrating bindable services and environment injection automatically. With edge services already auto-scaling, Mikrokat fulfills the orchestration role in spirit by handling service integration, environment injection, and uniform builds across edge environments.
 
 ## What Problem Does Mikrokat Solve?
 
