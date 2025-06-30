@@ -9,6 +9,7 @@
 * [Middlewares](#middlewares)
 * [Static Content](#static-content)
 * [Conditional Imports](#conditional-imports)
+* [Bindable Services](#bindable-services)
 * [Config Filesystem](#config-filesystem)
 
 Mikrokat compiles a universal request handler into platform-specific edge runtimes, letting you write once and deploy anywhere.
@@ -208,6 +209,35 @@ export function onFetch({env, platform, imports}) {
         env.DB=new imports.Database("local.sqlite");
 }
 ```
+
+## Bindable Services
+
+Mikrokat supports Bindable Services so your app can cleanly declare and connect to cloud resources while staying portable across platforms.
+
+Declare your services in mikrokat.json mikrokat.services. Mikrokat will inject these during runtime into your environment. 
+
+Example:
+
+```json
+{
+  "services": {
+    "DB": [
+      {
+        "type": "better-sqlite3",
+        "filename": "mylocalstagingdatabase.db",
+        "if": {"platform": "node"}
+      },
+      {
+        "type": "neon",
+        "url": "...",
+        "if": {"platform": "netlify"}
+      }
+    ]
+  }
+}
+```
+
+This will make the database available under `env.DB` at runtime.
 
 ## Config Filesystem
 
