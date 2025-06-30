@@ -46,7 +46,16 @@ export async function mikrokatBuild(options) {
 	options.cwd=await getEffectiveCwd(options.cwd);
 	options=await initOptions(options);
 	let project=new MikrokatProject(options);
-	await project.load();
 
+	await project.load();
 	await project.build();
+}
+
+export async function mikrokatDeploy(options) {
+	options.cwd=await getEffectiveCwd(options.cwd);
+	options=await initOptions(options);
+	let project=new MikrokatProject(options);
+
+	await project.load();
+	await project.deploy();
 }

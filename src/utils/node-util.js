@@ -113,7 +113,7 @@ export function findNodeBin(...args) {
             return fn;
     }
 
-    throw new Error("Can't find binary: "+name);
+    throw new DeclaredError("Can't find binary: "+name);
 }
 
 export function killTreeAndWait(pid, signal = 'SIGINT', timeout = 10000, checkInterval = 200) {
@@ -303,5 +303,63 @@ export async function waitForPort(port, options = {}) {
 
         const interval = setInterval(check, checkInterval);
         check(); // immediate first check
+    });
+}
+
+/**
+ * Runs a command in a Promise.
+ * @param {string} command - The command to run (e.g., 'node').
+ * @param {string[]} args - Arguments for the command.
+ * @param {object} [options]
+ * @param {boolean} [options.captureOutput=false] - Whether to capture stdout/stderr.
+ * @param {object} [options.spawnOptions] - Additional spawn options if needed.
+ * @returns {Promise<{code: number, signal: string|null, stdout?: string, stderr?: string}>}
+ */
+export async function runCommand(command, args = [], options = {}) {
+    if (options.nodeCwd)
+        command=findNodeBin({cwd: options.nodeCwd, name: command});
+
+    const {
+        captureOutput = false,
+        spawnOptions = {}
+    } = options;
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, {
+            stdio: captureOutput ? ['ignore', 'pipe', 'pipe'] : 'inherit',
+            ...spawnOptions
+        });
+
+        let output="";
+
+        if (captureOutput) {
+            if (child.stdout) {
+                child.stdout.on('data', (data) => {
+                    output += data.toString();
+                });
+            }
+            if (child.stderr) {
+                child.stderr.on('data', (data) => {
+                    output += data.toString();
+                });
+            }
+        }
+
+        child.on('error', (err) => {
+            //reject(new DeclaredError("blbbllb"));
+            reject(err);
+        });
+
+        child.on('close', (code, signal) => {
+            if (options.hasOwnProperty("expect") &&
+                    code!=options.expect)
+                reject(new DeclaredError(`Command failed (${code}).`));
+
+            if (captureOutput)
+                resolve(output);
+
+            else
+                resolve();
+        });
     });
 }

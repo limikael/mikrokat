@@ -299,6 +299,22 @@ export default class MikrokatProject {
 		}
 	}
 
+	async deploy() {
+		if (this.platform=="node") {
+			this.log("Specify platform to deploy to using --platform=<platform>.");
+			return;
+		}
+
+		else {
+			await this.build();
+
+			let platform=new platformClasses[this.platform]({project: this});
+			let server=await platform.deploy();
+
+			return server;
+		}
+	}
+
 	async close() {
 		if (!this.httpServer)
 			throw new Error("Not running");

@@ -1,6 +1,6 @@
 import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
-import {startCommand, findNodeBin} from "../utils/node-util.js";
+import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
 
 let VERCEL_STUB=`
 //
@@ -80,6 +80,17 @@ export default class VercelPlatform extends BasePlatform {
 			"--cwd",this.project.cwd,
 			"dev",
 			"--listen","0.0.0.0:"+this.project.port
+		],options);
+	}
+
+	async deploy() {
+		let options={
+			nodeCwd: this.project.cwd,
+			expect: 0,
+		}
+
+		return await runCommand("vercel",[
+			"deploy"
 		],options);
 	}
 }

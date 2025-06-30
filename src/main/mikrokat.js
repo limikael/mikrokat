@@ -7,7 +7,7 @@ import fs from "fs";
 import {fileURLToPath} from 'node:url';
 import platformClasses from "../platforms/platform-classes.js";
 import {getPackageVersion} from "../utils/node-util.js";
-import {mikrokatInit, mikrokatBuild, mikrokatServe} from "./mikrokat-commands.js";
+import {mikrokatInit, mikrokatBuild, mikrokatServe, mikrokatDeploy} from "./mikrokat-commands.js";
 import {withProgramOptions} from "../utils/commander-util.js"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -15,11 +15,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 program.name("mikrokat")
 	.description("Multi provider edge mikro framework.")
 	.passThroughOptions()
+	.allowExcessArguments()
 	.option("--cwd <cwd>","Run as if started from this dir.",process.cwd())
 	.option("--silent","Suppress output.")
 	.option("--version","Print version.")
 	.action(async options=>{
-		if (options.version)
+		if (program.args.length)
+			console.log("Unknown command: "+program.args[0]);
+
+		else if (options.version)
 			console.log(await getPackageVersion(__dirname));
 
 		else
@@ -39,6 +43,12 @@ program.command("build")
 	.option("--main <entrypoint>","Server entrypoint.")
 	.addOption(new Option("--platform <provider>","Provider to build for.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatBuild));
+
+program.command("deploy")
+	.description("Deploy to platform provider.")
+	.option("--main <entrypoint>","Server entrypoint.")
+	.addOption(new Option("--platform <provider>","Provider to deploy to.").choices(Object.keys(platformClasses)).env("PLATFORM"))
+	.action(withProgramOptions(program,mikrokatDeploy));
 
 program.command("init")
 	.description("Initialize project and/or platform.")

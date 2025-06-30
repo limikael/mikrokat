@@ -1,6 +1,6 @@
 import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
-import {startCommand, findNodeBin} from "../utils/node-util.js";
+import {startCommand, runCommand, findNodeBin} from "../utils/node-util.js";
 
 let CLOUDFLARE_STUB=`
 //
@@ -110,6 +110,13 @@ export default class CloudflarePlatform extends BasePlatform {
 	}
 
 	async deploy() {
+		let options={
+			nodeCwd: this.project.cwd,
+			expect: 0,
+		}
 
+		return await runCommand("wrangler",[
+			"deploy"
+		],options);
 	}
 }
