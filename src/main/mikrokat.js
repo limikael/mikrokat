@@ -57,7 +57,7 @@ program.command("init")
 	.action(withProgramOptions(program,mikrokatInit));
 
 program.command("clean")
-	.description("Remove build artifacts and platform config.")
+	.description("Remove build artifacts and/or platform config.")
 	.option("--purge","Remove all files related to the platform.")
 	.addOption(new Option("--platform <provider>","Clean up files for this platform.").choices(Object.keys(platformClasses))/*.env("PLATFORM")*/)
 	.action(withProgramOptions(program,mikrokatClean));
