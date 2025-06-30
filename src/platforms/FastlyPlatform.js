@@ -105,4 +105,19 @@ export default class FastlyPlatform extends BasePlatform {
 			"--dir",this.project.cwd,
 		],options);
 	}
+
+	async clean({purge}) {
+		await fsp.rm(path.join(this.project.cwd,"bin"),{recursive: true, force: true});
+		await fsp.rm(path.join(this.project.cwd,"pkg"),{recursive: true, force: true});
+
+		if (purge) {
+			await fsp.rm(path.join(this.project.cwd,"fastly.toml"),{recursive: true, force: true});
+
+			let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
+				if (!pkg.dependencies) pkg.dependencies={};
+				delete pkg.dependencies["@fastly/cli"];
+				delete pkg.dependencies["@fastly/js-compute"];
+			});
+		}
+	}
 }

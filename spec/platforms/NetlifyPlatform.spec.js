@@ -1,7 +1,7 @@
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
-import {mikrokatInit, mikrokatBuild} from "../../src/main/mikrokat-commands.js";
+import {mikrokatInit, mikrokatBuild, mikrokatClean} from "../../src/main/mikrokat-commands.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -14,6 +14,17 @@ describe("NetlifyTaget",()=>{
 		await fsp.writeFile(path.join(projectDir,"package.json"),"{}");
 
 		await mikrokatInit({cwd: projectDir, platform: "netlify", quiet: true});
+
+		let pkg;
+		pkg=JSON.parse(await fsp.readFile(path.join(projectDir,"package.json"),"utf8"));
+		//console.log(pkg);
+		expect(pkg.dependencies["netlify-cli"]).toBeDefined();
+
+		await mikrokatClean({cwd: projectDir, platform: "netlify", purge: true});
+
+		pkg=JSON.parse(await fsp.readFile(path.join(projectDir,"package.json"),"utf8"));
+		//console.log(pkg);
+		expect(pkg.dependencies["netlify-cli"]).toBe(undefined);
 	});
 
 	it("netlify can be built",async ()=>{

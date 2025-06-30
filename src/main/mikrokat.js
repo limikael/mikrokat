@@ -7,7 +7,7 @@ import fs from "fs";
 import {fileURLToPath} from 'node:url';
 import platformClasses from "../platforms/platform-classes.js";
 import {getPackageVersion} from "../utils/node-util.js";
-import {mikrokatInit, mikrokatBuild, mikrokatServe, mikrokatDeploy} from "./mikrokat-commands.js";
+import {mikrokatInit, mikrokatBuild, mikrokatServe, mikrokatDeploy, mikrokatClean} from "./mikrokat-commands.js";
 import {withProgramOptions} from "../utils/commander-util.js"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -55,6 +55,12 @@ program.command("init")
 	.option("--no-init-project","Don't create package.json and mikrokat.json.")
 	.addOption(new Option("--platform <provider>","Provider to initialize.").choices(Object.keys(platformClasses))/*.env("PLATFORM")*/)
 	.action(withProgramOptions(program,mikrokatInit));
+
+program.command("clean")
+	.description("Remove build artifacts and platform config.")
+	.option("--purge","Remove all files related to the platform.")
+	.addOption(new Option("--platform <provider>","Clean up files for this platform.").choices(Object.keys(platformClasses))/*.env("PLATFORM")*/)
+	.action(withProgramOptions(program,mikrokatClean));
 
 try {
 	await program.parseAsync();

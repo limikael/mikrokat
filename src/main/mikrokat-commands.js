@@ -59,3 +59,11 @@ export async function mikrokatDeploy(options) {
 	await project.load();
 	await project.deploy();
 }
+
+export async function mikrokatClean(options) {
+	options.cwd=await getEffectiveCwd(options.cwd);
+	options=await initOptions(options);
+	let project=new MikrokatProject(options);
+
+	await project.clean();
+}

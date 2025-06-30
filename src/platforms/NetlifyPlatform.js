@@ -110,4 +110,19 @@ export default class NetlifyPlatform extends BasePlatform {
 			"--cwd",this.project.cwd,
 		],options);
 	}
+
+	async clean({purge}) {
+		await fsp.rm(path.join(this.project.cwd,"netlify"),{recursive: true, force: true});
+		await fsp.rm(path.join(this.project.cwd,".netlify"),{recursive: true, force: true});
+
+		if (purge) {
+			await fsp.rm(path.join(this.project.cwd,"netlify.toml"),{recursive: true, force: true});
+
+			let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
+				if (!pkg.dependencies) pkg.dependencies={};
+				delete pkg.dependencies["netlify-cli"];
+			});
+		}
+	}
+
 }

@@ -4,6 +4,7 @@ import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
 import path from "node:path";
+import {DeclaredError} from "../utils/js-util.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,12 +38,11 @@ export default class VercelPlatform extends BasePlatform {
 	}
 
 	async build() {
+		await this.project.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
 		await fsp.copyFile(
 			path.join(__dirname,"../main/MikrokatServer.js"),
 			path.join(this.project.cwd,"api/__MikrokatServer.js")
 		);
-
-		await this.project.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
 	}
 
 	async init() {
@@ -108,5 +108,19 @@ export default class VercelPlatform extends BasePlatform {
 			"--cwd",this.project.cwd,
 			"deploy"
 		],options);
+	}
+
+	async clean({purge}) {
+		await fsp.rm(path.join(this.project.cwd,"api"),{recursive: true, force: true});
+		await fsp.rm(path.join(this.project.cwd,".vercel"),{recursive: true, force: true});
+
+		if (purge) {
+			await fsp.rm(path.join(this.project.cwd,"vercel.json"),{recursive: true, force: true});
+
+			let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
+				if (!pkg.dependencies) pkg.dependencies={};
+				delete pkg.dependencies["vercel"];
+			});
+		}
 	}
 }

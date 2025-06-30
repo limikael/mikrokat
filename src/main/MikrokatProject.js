@@ -25,7 +25,7 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, platform, port, log, config, env, initProject, target}={}) {
+	constructor({cwd, main, platform, port, log, config, env, initProject, target, purge}={}) {
 		if (target)
 			throw new Error("It is not called target, it is called platform");
 
@@ -36,6 +36,7 @@ export default class MikrokatProject {
 		this.paramConfig=config;
 		this.env=env;
 		this.initProject=initProject;
+		this.purge=purge;
 		if (this.initProject===undefined)
 			this.initProject=true;
 
@@ -337,6 +338,15 @@ export default class MikrokatProject {
 
 		await platform.verifyInit();
 		await platform.build();
+	}
+
+	async clean() {
+		await fsp.rm(path.join(this.cwd,".target"),{recursive: true, force: true});
+
+		if (this.platform!="node") {
+			let platform=new platformClasses[this.platform]({project: this});
+			await platform.clean({purge: this.purge});
+		}
 	}
 
 	async init() {

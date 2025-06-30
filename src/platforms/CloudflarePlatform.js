@@ -118,4 +118,17 @@ export default class CloudflarePlatform extends BasePlatform {
 			"--cwd",this.project.cwd,
 		],options);
 	}
+
+	async clean({purge}) {
+		await fsp.rm(path.join(this.project.cwd,".wrangler"),{recursive: true, force: true});
+
+		if (purge) {
+			await fsp.rm(path.join(this.project.cwd,"wrangler.json"),{recursive: true, force: true});
+
+			let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
+				if (!pkg.dependencies) pkg.dependencies={};
+				delete pkg.dependencies.wrangler;
+			});
+		}
+	}
 }

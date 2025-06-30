@@ -1,4 +1,4 @@
-import {mikrokatServe, mikrokatInit} from "../../src/main/mikrokat-commands.js";
+import {mikrokatServe, mikrokatInit, mikrokatClean} from "../../src/main/mikrokat-commands.js";
 import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
@@ -32,6 +32,15 @@ describe("mikrokat-system",()=>{
 		expect(responseBody).toEqual("Hello from platform: cloudflare");
 
 		await server.stop();
+
+		expect(fs.existsSync(path.join(projectDir,".wrangler"))).toEqual(true);
+
+		await mikrokatClean({
+			cwd: projectDir,
+			platform: "cloudflare",
+		});
+
+		expect(fs.existsSync(path.join(projectDir,".wrangler"))).toEqual(false);
 	});
 
 	it("can run vercel",async()=>{
