@@ -92,12 +92,12 @@ export default class MikrokatProject {
 		return main.map(m=>path.resolve(this.cwd,m));
 	}
 
-	getEntrypointImports() {
+	getEntrypointImports(dir) {
 		let s="";
 
 		let eps=this.getEntrypoints();
 		for (let i=0; i<eps.length; i++)
-			s+=`import * as __Module${i} from ${JSON.stringify(eps[i])};\n`
+			s+=`import * as __Module${i} from ${JSON.stringify(path.relative(dir,eps[i]))};\n`
 
 		return ({
 			imports: s,
@@ -129,10 +129,10 @@ export default class MikrokatProject {
 		});
 	}
 
-	async getStubVars() {
+	async getStubVars(dir) {
 		let applicableServices=this.getApplicableServices();
 
-		let epsImports=this.getEntrypointImports();
+		let epsImports=this.getEntrypointImports(dir);
 		let condImports=this.getConditionalImports().getImportStub();
 		let serviceImports=this.getServiceImports();
 		let fileContent=`fileContent: ${JSON.stringify(await this.getFileContent(),null,2)},\n`;
@@ -160,7 +160,7 @@ export default class MikrokatProject {
 		let outfileAbs=path.resolve(this.cwd,outfile);
 		await fsp.mkdir(path.dirname(outfileAbs),{recursive: true});
 
-		content=content.replaceAll("$VARS",await this.getStubVars());
+		content=content.replaceAll("$VARS",await this.getStubVars(path.dirname(outfileAbs)));
 
 		await fsp.writeFile(outfileAbs,content);
 	}

@@ -1,6 +1,11 @@
 import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
 import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
+import {fileURLToPath} from 'url';
+import fs, {promises as fsp} from "fs";
+import path from "node:path";
+
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 let VERCEL_STUB=`
 //
@@ -9,7 +14,7 @@ let VERCEL_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat/server";
+import MikrokatServer from "./__MikrokatServer.js";
 
 $VARS
 
@@ -32,6 +37,11 @@ export default class VercelPlatform extends BasePlatform {
 	}
 
 	async build() {
+		await fsp.copyFile(
+			path.join(__dirname,"../main/MikrokatServer.js"),
+			path.join(this.project.cwd,"api/__MikrokatServer.js")
+		);
+
 		await this.project.writeStub("api/entrypoint.vercel.js",VERCEL_STUB);
 	}
 

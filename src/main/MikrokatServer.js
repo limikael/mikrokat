@@ -1,4 +1,19 @@
-import MiniFs from "../utils/MiniFs.js";
+class MiniFs {
+	constructor(fileContent) {
+		this.fileContent=fileContent;
+
+		this.promises={
+			readFile: async fn=>this.readFileSync(fn)
+		}
+	}
+
+	readFileSync(fn) {
+		if (!this.fileContent.hasOwnProperty(fn))
+			throw new Error("File not found: "+fn);
+
+		return this.fileContent[fn];
+	}
+}
 
 export default class MikrokatServer {
 	constructor({modules, env, platform, cwd, imports, fileContent, services, serviceClasses, serviceMeta}) {

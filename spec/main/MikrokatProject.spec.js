@@ -81,7 +81,7 @@ describe("MikrokatProject",()=>{
 
 		await project.load();
 
-		let stubVars=await project.getStubVars();
+		let stubVars=await project.getStubVars(project.cwd);
 		//console.log(stubVars);
 
 		expect(stubVars).toContain(`"myfile.txt": "hello world"`);
