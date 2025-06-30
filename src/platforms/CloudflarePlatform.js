@@ -1,6 +1,9 @@
 import BasePlatform from "./BasePlatform.js";
 import packageVersions from "../main/package-versions.js";
 import {startCommand, runCommand, findNodeBin} from "../utils/node-util.js";
+import fs, {promises as fsp} from "fs";
+import path from "node:path";
+import {DeclaredError} from "../utils/js-util.js";
 
 let CLOUDFLARE_STUB=`
 //
@@ -54,13 +57,6 @@ export default class CloudflarePlatform extends BasePlatform {
 
 	async init() {
 		let pkg=await this.project.processProjectFile("package.json","json",async pkg=>{
-			/*if (!pkg.scripts) pkg.scripts={};
-			if (!pkg.scripts["dev:cloudflare"])
-				pkg.scripts["dev:cloudflare"]="wrangler dev";
-
-			if (!pkg.scripts["deploy:cloudflare"])
-				pkg.scripts["deploy:cloudflare"]="wrangler deploy";*/
-
 			if (!pkg.dependencies) pkg.dependencies={};
 			pkg.dependencies.wrangler="^"+packageVersions.wrangler;
 		});
@@ -71,9 +67,6 @@ export default class CloudflarePlatform extends BasePlatform {
 
 			if (!wrangler.name)
 				wrangler.name=pkg.name;
-
-			/*if (!wrangler.build) wrangler.build={};
-			wrangler.build.command="PLATFORM=cloudflare npm run build";*/
 
 			if (!wrangler.compatibility_date)
 				wrangler.compatibility_date=new Date().toISOString().slice(0, 10);
@@ -91,6 +84,11 @@ export default class CloudflarePlatform extends BasePlatform {
 			if (!ignore.includes(".target")) ignore.push(".target");
 			if (!ignore.includes(".wrangler")) ignore.push(".wrangler");
 		});
+	}
+
+	async verifyInit() {
+		if (!fs.existsSync(path.join(this.project.cwd,"wrangler.json")))
+			throw new DeclaredError("Cloudflare not initialized, no wrangler.json. Run init.");
 	}
 
 	async devServer() {

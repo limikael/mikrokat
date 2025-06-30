@@ -2,6 +2,9 @@ import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
 import {startCommand, runCommand} from "../utils/node-util.js";
+import fs, {promises as fsp} from "fs";
+import path from "node:path";
+import {DeclaredError} from "../utils/js-util.js";
 
 let NETLIFY_STUB=`
 //
@@ -73,6 +76,11 @@ export default class NetlifyPlatform extends BasePlatform {
 			if (!ignore.includes(".netlify")) ignore.push(".netlify");
 			if (!ignore.includes("netlify")) ignore.push("netlify");
 		});
+	}
+
+	async verifyInit() {
+		if (!fs.existsSync(path.join(this.project.cwd,"netlify.toml")))
+			throw new DeclaredError("Netlify not initialized, no netlify.toml. Run init.");
 	}
 
 	async devServer() {

@@ -2,6 +2,9 @@ import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
 import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
+import fs, {promises as fsp} from "fs";
+import path from "node:path";
+import {DeclaredError} from "../utils/js-util.js";
 
 let FASTLY_STUB=`
 //
@@ -64,6 +67,11 @@ export default class FastlyPlatform extends BasePlatform {
 			if (!ignore.includes("bin")) ignore.push("bin");
 			if (!ignore.includes("pkg")) ignore.push("pkg");
 		});
+	}
+
+	async verifyInit() {
+		if (!fs.existsSync(path.join(this.project.cwd,"fastly.toml")))
+			throw new DeclaredError("Fastly not initialized, no fastly.toml. Run init.");
 	}
 
 	async devServer() {

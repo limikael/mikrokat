@@ -16,10 +16,6 @@ describe("CloudflarePlatform",()=>{
 
 		await mikrokatInit({cwd: projectDir, platform: "cloudflare", silent: true})
 
-		/*let cli=new MikrokatCli({options: {cwd: projectDir, platform: "cloudflare", quiet: true}});
-
-		await cli.init();*/
-
 		let pkg=await JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
 		expect(pkg.dependencies.wrangler).toEqual("^4.20.1");
 	});
@@ -37,6 +33,12 @@ describe("CloudflarePlatform",()=>{
 				]
 			}
 		`);
+
+		await mikrokatInit({cwd: projectDir, silent: true});
+
+		await expectAsync(
+			mikrokatBuild({cwd: projectDir, platform: "cloudflare", silent: true})
+		).toBeRejectedWith(new Error("Cloudflare not initialized, no wrangler.json. Run init."));
 
 		await mikrokatInit({cwd: projectDir, platform: "cloudflare", silent: true});
 		await mikrokatBuild({cwd: projectDir, platform: "cloudflare", silent: true});

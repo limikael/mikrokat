@@ -334,6 +334,8 @@ export default class MikrokatProject {
 		}
 
 		let platform=new platformClasses[this.platform]({project: this});
+
+		await platform.verifyInit();
 		await platform.build();
 	}
 

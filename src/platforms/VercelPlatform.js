@@ -78,6 +78,11 @@ export default class VercelPlatform extends BasePlatform {
 		});
 	}
 
+	async verifyInit() {
+		if (!fs.existsSync(path.join(this.project.cwd,"vercel.json")))
+			throw new DeclaredError("Vercel not initialized, no vercel.json. Run init.");
+	}
+
 	async devServer() {
 		let options={
 			//waitForOutput: "Ready!",
