@@ -34,6 +34,7 @@ program.command("serve")
 	.alias("dev")
 	.description("Serve from this machine.")
 	.option("--main <entrypoint>","Server entrypoint.")
+	.option("--no-dependency-check","Don't check if dependencies are up-to-date.")
 	.addOption(new Option("--port <port>","Listening port.").default(3000).env("PORT"))
 	.addOption(new Option("--platform <provider>","Provider to start a dev server for.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatServe));
@@ -41,12 +42,14 @@ program.command("serve")
 program.command("build")
 	.description("Build entrypoint stub for provider.")
 	.option("--main <entrypoint>","Server entrypoint.")
+	.option("--no-dependency-check","Don't check if dependencies are up-to-date.")
 	.addOption(new Option("--platform <provider>","Provider to build for.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatBuild));
 
 program.command("deploy")
 	.description("Deploy to platform provider.")
 	.option("--main <entrypoint>","Server entrypoint.")
+	.option("--no-dependency-check","Don't check if dependencies are up-to-date.")
 	.addOption(new Option("--platform <provider>","Provider to deploy to.").choices(Object.keys(platformClasses)).env("PLATFORM"))
 	.action(withProgramOptions(program,mikrokatDeploy));
 

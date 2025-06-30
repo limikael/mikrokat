@@ -3,6 +3,9 @@ import path from "node:path";
 import fs, {promises as fsp} from "fs";
 
 export async function processProjectFile({cwd, filename, format, processor}) {
+	/*if (!fs.existsSync(cwd))
+		await fsp.mkdir(cwd,{recursive: true});*/
+
 	let filenameAbs=path.resolve(cwd,filename);
 
 	let content;

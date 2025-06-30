@@ -1,5 +1,8 @@
 import * as resolve from 'resolve.exports';
-import {responseAssert} from "./js-util.js";
+import {responseAssert, DeclaredError} from "./js-util.js";
+import fs from 'node:fs';
+import path from 'node:path';
+import semver from 'semver';
 
 export function safeResolveExports(...args) {
 	try {
@@ -55,4 +58,54 @@ export async function getPackageInfo(pkgName) {
 
 	let result=await response.json();
 	return result;
+}
+
+export async function checkDependenciesUpToDate(cwd) {
+    const pkgPath = path.join(cwd, 'package.json');
+    const pkgData = JSON.parse(await fs.promises.readFile(pkgPath, 'utf8'));
+    const deps = pkgData.dependencies || {};
+
+    const results = {};
+
+    for (const [name, declaredRange] of Object.entries(deps)) {
+        if (!semver.validRange(declaredRange))
+            continue;
+
+        const modulePkgPath = path.join(cwd, 'node_modules', name, 'package.json');
+        let installedVersion;
+        try {
+            const modulePkgData = JSON.parse(await fs.promises.readFile(modulePkgPath, 'utf8'));
+            installedVersion = modulePkgData.version;
+        } catch (e) {
+            results[name] = { status: 'missing', declared: declaredRange, installed: null };
+            continue;
+        }
+
+        const isSatisfied = semver.satisfies(installedVersion, declaredRange, { includePrerelease: true });
+        results[name] = {
+            status: isSatisfied ? 'up-to-date' : 'outdated',
+            declared: declaredRange,
+            installed: installedVersion
+        };
+    }
+
+    return results;
+}
+
+export async function assertDependenciesUpToDate(cwd) {
+    const results = await checkDependenciesUpToDate(cwd);
+
+    const problems = [];
+    for (const [name, info] of Object.entries(results)) {
+        if (info.status === 'missing') {
+            problems.push(`- ${name} is missing (declared: ${info.declared})`);
+        } else if (info.status === 'outdated') {
+            problems.push(`- ${name} is outdated (declared: ${info.declared}, installed: ${info.installed})`);
+        }
+    }
+
+    if (problems.length > 0) {
+        const message = `Dependencies not up to date:\n` + problems.join('\n');
+        throw new DeclaredError(message);
+    }
 }

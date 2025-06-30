@@ -5,6 +5,7 @@ import {startCommand, runCommand} from "../utils/node-util.js";
 import fs, {promises as fsp} from "fs";
 import path from "node:path";
 import {DeclaredError} from "../utils/js-util.js";
+import {fileURLToPath} from 'url';
 
 let NETLIFY_STUB=`
 //
@@ -13,7 +14,7 @@ let NETLIFY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat/server";
+import MikrokatServer from "../../.target/__MikrokatServer.js";
 
 $VARS
 
@@ -28,6 +29,8 @@ export default async function(request) {
 export const config = { path: "/*" };
 `;
 
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
+
 export default class NetlifyPlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
@@ -39,6 +42,17 @@ export default class NetlifyPlatform extends BasePlatform {
 		});
 
 		await this.project.writeStub("netlify/edge-functions/entrypoint.netlify.js",NETLIFY_STUB);
+
+		await fsp.mkdir(path.join(this.project.cwd,".target"),{recursive: true});
+		await fsp.copyFile(
+			path.join(__dirname,"../main/MikrokatServer.js"),
+			path.join(this.project.cwd,".target/__MikrokatServer.js")
+		);
+
+		/*await fsp.copyFile(
+			path.join(__dirname,"../main/MikrokatServer.js"),
+			path.join(this.project.cwd,"netlify/edge-functions/__MikrokatServer.js")
+		);*/
 	}
 
 	async init() {

@@ -5,6 +5,7 @@ import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
 import fs, {promises as fsp} from "fs";
 import path from "node:path";
 import {DeclaredError} from "../utils/js-util.js";
+import {fileURLToPath} from 'url';
 
 let FASTLY_STUB=`
 //
@@ -13,7 +14,7 @@ let FASTLY_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat/server";
+import MikrokatServer from "./__MikrokatServer.js";
 
 $VARS
 
@@ -26,6 +27,8 @@ addEventListener("fetch", ev=>{
 });
 `;
 
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
+
 export default class FastlyPlatform extends BasePlatform {
 	constructor(arg) {
 		super(arg);
@@ -33,6 +36,10 @@ export default class FastlyPlatform extends BasePlatform {
 
 	async build() {
 		await this.project.writeStub(".target/entrypoint.fastly.js",FASTLY_STUB);
+		await fsp.copyFile(
+			path.join(__dirname,"../main/MikrokatServer.js"),
+			path.join(this.project.cwd,".target/__MikrokatServer.js")
+		);
 	}
 
 	async init() {

@@ -1,7 +1,7 @@
 import MikrokatServer from "./MikrokatServer.js";
 import {createNodeRequestListener} from "serve-fetch";
 import {readPackageUp} from 'read-package-up';
-import {safeResolveExports, pkgSetExport} from "../utils/npm-util.js";
+import {safeResolveExports, pkgSetExport, assertDependenciesUpToDate} from "../utils/npm-util.js";
 import {DeclaredError, arrayify} from "../utils/js-util.js";
 import path from "node:path";
 import http from "node:http";
@@ -25,7 +25,7 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, platform, port, log, config, env, initProject, target, purge}={}) {
+	constructor({cwd, main, platform, port, log, config, env, initProject, target, purge, dependencyCheck}={}) {
 		if (target)
 			throw new Error("It is not called target, it is called platform");
 
@@ -36,7 +36,13 @@ export default class MikrokatProject {
 		this.paramConfig=config;
 		this.env=env;
 		this.initProject=initProject;
+		this.dependencyCheck=dependencyCheck;
 		this.purge=purge;
+
+		if (this.dependencyCheck===undefined)
+			this.dependencyCheck=true;
+
+
 		if (this.initProject===undefined)
 			this.initProject=true;
 
@@ -287,6 +293,7 @@ export default class MikrokatProject {
 
 	async serve() {
 		if (this.platform=="node") {
+			await this.build();
 			return await this.serveNode();
 		}
 
@@ -329,6 +336,9 @@ export default class MikrokatProject {
 	}
 
 	async build() {
+		if (this.dependencyCheck)
+			await assertDependenciesUpToDate(this.cwd);
+
 		if (this.platform=="node") {
 			//this.log("Nothing to build for node.");
 			return;

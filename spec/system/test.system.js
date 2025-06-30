@@ -23,6 +23,7 @@ describe("mikrokat-system",()=>{
 		let server=await mikrokatServe({
 			cwd: projectDir,
 			platform: "cloudflare",
+			dependencyCheck: false,
 			port: 3456
 		});
 
@@ -57,6 +58,7 @@ describe("mikrokat-system",()=>{
 		let server=await mikrokatServe({
 			cwd: projectDir,
 			platform: "vercel",
+			dependencyCheck: false,
 			port: 3456
 		});
 
@@ -82,6 +84,7 @@ describe("mikrokat-system",()=>{
 		let server=await mikrokatServe({
 			cwd: projectDir,
 			platform: "netlify",
+			dependencyCheck: false,
 			port: 3456
 		});
 
@@ -107,6 +110,7 @@ describe("mikrokat-system",()=>{
 		let server=await mikrokatServe({
 			cwd: projectDir,
 			platform: "fastly",
+			dependencyCheck: false,
 			port: 3456
 		});
 

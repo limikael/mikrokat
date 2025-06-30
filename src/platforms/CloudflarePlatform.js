@@ -4,6 +4,9 @@ import {startCommand, runCommand, findNodeBin} from "../utils/node-util.js";
 import fs, {promises as fsp} from "fs";
 import path from "node:path";
 import {DeclaredError} from "../utils/js-util.js";
+import {fileURLToPath} from 'url';
+
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 let CLOUDFLARE_STUB=`
 //
@@ -12,8 +15,8 @@ let CLOUDFLARE_STUB=`
 // Don't edit this file, and don't put it under version control!
 //
 
-import {MikrokatServer} from "mikrokat/server";
-import {guessCloudflareServiceType} from "mikrokat/cloudflare-util";
+import MikrokatServer from "./__MikrokatServer.js";
+import {guessCloudflareServiceType} from "./__cloudflare-util.js";
 
 $VARS
 
@@ -53,6 +56,15 @@ export default class CloudflarePlatform extends BasePlatform {
 
 	async build() {
 		await this.project.writeStub(".target/entrypoint.cloudflare.js",CLOUDFLARE_STUB);
+		await fsp.copyFile(
+			path.join(__dirname,"../main/MikrokatServer.js"),
+			path.join(this.project.cwd,".target/__MikrokatServer.js")
+		);
+
+		await fsp.copyFile(
+			path.join(__dirname,"../utils/cloudflare-util.js"),
+			path.join(this.project.cwd,".target/__cloudflare-util.js")
+		);
 	}
 
 	async init() {
