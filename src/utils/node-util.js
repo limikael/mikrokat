@@ -6,6 +6,8 @@ import { spawn } from 'node:child_process';
 import {DeclaredError, objectifyArgs, ResolvablePromise} from "../utils/js-util.js";
 import findNodeModules from "find-node-modules";
 import treeKill from "tree-kill";
+import psTree from "ps-tree";
+import net from 'net';
 
 export async function createStaticResponse({request, cwd}) {
     let url=new URL(request.url);
@@ -114,6 +116,47 @@ export function findNodeBin(...args) {
     throw new Error("Can't find binary: "+name);
 }
 
+export function killTreeAndWait(pid, signal = 'SIGINT', timeout = 10000, checkInterval = 200) {
+    return new Promise((resolve, reject) => {
+        treeKill(pid, signal, (err) => {
+            if (err) return reject(err);
+        });
+
+        const start = Date.now();
+
+        const checkIfTreeIsGone = () => {
+            psTree(pid, (err, children) => {
+                if (err) return reject(err);
+
+                // Collect all PIDs: the parent and its children
+                const pids = [pid, ...children.map(p => parseInt(p.PID, 10))];
+
+                //console.log("pids: ",pids);
+
+                // Check if any are still alive
+                const alive = pids.some(p => {
+                    try {
+                        process.kill(p, 0);
+                        return true;
+                    } catch {
+                        return false;
+                    }
+                });
+
+                if (!alive) {
+                    resolve();
+                } else if (Date.now() - start > timeout) {
+                    reject(new Error('Timeout waiting for process tree to exit.'));
+                } else {
+                    setTimeout(checkIfTreeIsGone, checkInterval);
+                }
+            });
+        };
+
+        checkIfTreeIsGone();
+    });
+}
+
 class CommandJob {
     constructor() {
         this.stdoutBuffer=""
@@ -126,32 +169,28 @@ class CommandJob {
     }
 
     async stop() {
-        //this.child.kill("SIGINT");
-
-        await new Promise((resolve,reject)=>{
-            treeKill(this.child.pid,"SIGTERM",err=>{
-                if (err)
-                    reject(err);
-
-                else
-                    resolve();
-            });
-        })
-
+        await killTreeAndWait(this.child.pid);
         return await this.exitPromise;
     }
 }
 
-export function startCommand(cmd, args, options = {}) {
+export async function startCommand(cmd, args, options = {}) {
     let commandJob=new CommandJob();
 
     if (options.nodeCwd)
         cmd=findNodeBin({cwd: options.nodeCwd, name: cmd});
 
+    if (options.waitForPort &&
+            await isPortListening(options.waitForPort))
+        throw new DeclaredError("Port is already listening: "+options.waitForPort);
+
     return new Promise((resolve, reject) => {
+        let stdio="inherit";
+        if (options.waitForOutput)
+            stdio=['inherit', 'pipe', 'pipe'];
+
         const child = spawn(cmd, args, {
-            //stdio: "inherit",
-            stdio: ['inherit', 'pipe', 'pipe'],
+            stdio: stdio,
             env: { ...process.env, FORCE_COLOR: '1' },
             ...options
         });
@@ -160,21 +199,25 @@ export function startCommand(cmd, args, options = {}) {
 
         let buffer = '';
 
-        child.stdout.on('data', (data) => {
-            process.stdout.write(data);   // show live in terminal
-            commandJob.stdoutBuffer += data.toString();
-            if (options.waitForOutput && commandJob.stdoutBuffer.includes(options.waitForOutput)) {
-                resolve(commandJob);
-            }
-        });
+        if (child.stdout) {
+            child.stdout.on('data', (data) => {
+                process.stdout.write(data);   // show live in terminal
+                commandJob.stdoutBuffer += data.toString();
+                if (options.waitForOutput && commandJob.stdoutBuffer.includes(options.waitForOutput)) {
+                    resolve(commandJob);
+                }
+            });
+        }
 
-        child.stderr.on('data', (data) => {
-            process.stderr.write(data); // show errors live in terminal
-            commandJob.stderrBuffer += data.toString();
-            if (options.waitForOutput && commandJob.stderrBuffer.includes(options.waitForOutput)) {
-                resolve(commandJob);
-            }
-        });
+        if (child.stderr) {
+            child.stderr.on('data', (data) => {
+                process.stderr.write(data); // show errors live in terminal
+                commandJob.stderrBuffer += data.toString();
+                if (options.waitForOutput && commandJob.stderrBuffer.includes(options.waitForOutput)) {
+                    resolve(commandJob);
+                }
+            });
+        }
 
         child.on('exit', (code, signal) => {
             if (signal=="SIGTERM" || signal=="SIGINT")
@@ -194,5 +237,71 @@ export function startCommand(cmd, args, options = {}) {
             commandJob.exitPromise.reject(err);
             resolve(commandJob);
         });
+
+        if (options.waitForPort) {
+            waitForPort(options.waitForPort)
+                .then(()=>resolve(commandJob))
+                .catch(reject);
+        }
+    });
+}
+
+/**
+ * Checks if a given port is currently listening on localhost (127.0.0.1).
+ * @param {number} port - The port to check.
+ * @param {number} [timeout=500] - Optional timeout in milliseconds.
+ * @returns {Promise<boolean>} - Resolves to true if the port is listening, false otherwise.
+ */
+export async function isPortListening(port, timeout = 500) {
+    return new Promise((resolve) => {
+        const socket = new net.Socket();
+
+        const onError = () => {
+            socket.destroy();
+            resolve(false);
+        };
+
+        socket.setTimeout(timeout);
+        socket.once('error', onError);
+        socket.once('timeout', onError);
+
+        socket.connect(port, '127.0.0.1', () => {
+            socket.end();
+            resolve(true);
+        });
+    });
+}
+
+/**
+ * Waits until the specified port is listening on localhost.
+ * @param {number} port - The port to wait for.
+ * @param {object} [options]
+ * @param {number} [options.timeout=10000] - Max wait time in milliseconds before giving up.
+ * @param {number} [options.checkInterval=200] - Interval between checks in milliseconds.
+ * @returns {Promise<void>} - Resolves when the port is open, rejects on timeout.
+ */
+export async function waitForPort(port, options = {}) {
+    const {
+        timeout = 5*60000, // 5 minutes
+        checkInterval = 250
+    } = options;
+
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+        const check = async () => {
+            const isOpen = await isPortListening(port);
+            if (isOpen) {
+                clearInterval(interval);
+                resolve();
+            } else if (Date.now() - startTime >= timeout) {
+                clearInterval(interval);
+                reject(new Error(`Timed out waiting for port ${port} to open.`));
+            }
+            // else continue checking
+        };
+
+        const interval = setInterval(check, checkInterval);
+        check(); // immediate first check
     });
 }

@@ -68,7 +68,8 @@ export default class FastlyPlatform extends BasePlatform {
 
 	async devServer() {
 		let options={
-			waitForOutput: "INFO Listening on",
+			waitForPort: this.project.port,
+			//waitForOutput: "INFO Listening on",
 			nodeCwd: this.project.cwd,
 			expect: 0
 		}

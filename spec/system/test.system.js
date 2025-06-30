@@ -101,18 +101,18 @@ describe("mikrokat-system",()=>{
 			port: 3456
 		});
 
-		console.log("*** fastly started, sending req")
+		//console.log("*** fastly started, sending req")
 
 		let response=await fetch("http://localhost:3456")
 		let responseBody=await response.text();
 
 		expect(responseBody).toEqual("Hello from platform: fastly");
 
-		console.log("got response from fastly, stopping");
+		//console.log("got response from fastly, stopping");
 
 		await server.stop();
 
-		console.log("fastly stopped");
+		//console.log("fastly stopped");
 	});
 });
 

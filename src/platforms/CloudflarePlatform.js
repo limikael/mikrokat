@@ -91,22 +91,14 @@ export default class CloudflarePlatform extends BasePlatform {
 			if (!ignore.includes(".target")) ignore.push(".target");
 			if (!ignore.includes(".wrangler")) ignore.push(".wrangler");
 		});
-
-		/*this.project.log("Cloudflare initialized. Start a dev server with:");
-		this.project.log();
-		this.project.log("  npm run dev:cloudflare");
-		this.project.log();
-		this.project.log("Deploy with:");
-		this.project.log();
-		this.project.log("  npm run deploy:cloudflare");
-		this.project.log();*/
 	}
 
 	async devServer() {
 		let options={
-			waitForOutput: "Ready on",
+			//waitForOutput: "Ready on",
 			nodeCwd: this.project.cwd,
-			expect: 0
+			expect: 0,
+			waitForPort: this.project.port
 		}
 
 		return await startCommand("wrangler",[

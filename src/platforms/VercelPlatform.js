@@ -66,20 +66,12 @@ export default class VercelPlatform extends BasePlatform {
 			if (!ignore.includes(".vercel")) ignore.push(".vercel");
 			if (!ignore.includes("api")) ignore.push("api");
 		});
-
-		/*this.cli.log("Vercel initialized. Start a dev server with:");
-		this.cli.log();
-		this.cli.log("  npm run dev:vercel");
-		this.cli.log();
-		this.cli.log("Deploy with:");
-		this.cli.log();
-		this.cli.log("  npm run deploy:vercel");
-		this.cli.log();*/
 	}
 
 	async devServer() {
 		let options={
-			waitForOutput: "Ready!",
+			//waitForOutput: "Ready!",
+			waitForPort: this.project.port,
 			nodeCwd: this.project.cwd,
 			expect: 0
 		}

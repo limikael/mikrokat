@@ -73,20 +73,12 @@ export default class NetlifyPlatform extends BasePlatform {
 			if (!ignore.includes(".netlify")) ignore.push(".netlify");
 			if (!ignore.includes("netlify")) ignore.push("netlify");
 		});
-
-		/*this.project.log("Netlify initialized. Start a dev server with:");
-		this.project.log();
-		this.project.log("  npm run dev:netlify");
-		this.project.log();
-		this.project.log("Deploy with:");
-		this.project.log();
-		this.project.log("  npm run deploy:netlify");
-		this.project.log();*/
 	}
 
 	async devServer() {
 		let options={
-			waitForOutput: "Local dev server ready",
+			//waitForOutput: "Local dev server ready",
+			waitForPort: this.project.port,
 			nodeCwd: this.project.cwd,
 			expect: 0
 		}
