@@ -1,7 +1,7 @@
 import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
-import {startCommand} from "../utils/node-util.js";
+import {startCommand, runCommand} from "../utils/node-util.js";
 
 let NETLIFY_STUB=`
 //
@@ -88,6 +88,18 @@ export default class NetlifyPlatform extends BasePlatform {
 			"--cwd",this.project.cwd,
 			"--no-open",
 			"--port",this.project.port
+		],options);
+	}
+
+	async deploy() {
+		let options={
+			nodeCwd: this.project.cwd,
+			expect: 0,
+		}
+
+		return await runCommand("netlify",[
+			"deploy",
+			"--cwd",this.project.cwd,
 		],options);
 	}
 }

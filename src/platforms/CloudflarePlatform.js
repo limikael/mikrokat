@@ -116,7 +116,8 @@ export default class CloudflarePlatform extends BasePlatform {
 		}
 
 		return await runCommand("wrangler",[
-			"deploy"
+			"deploy",
+			"--cwd",this.project.cwd,
 		],options);
 	}
 }

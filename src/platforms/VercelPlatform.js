@@ -100,6 +100,7 @@ export default class VercelPlatform extends BasePlatform {
 		}
 
 		return await runCommand("vercel",[
+			"--cwd",this.project.cwd,
 			"deploy"
 		],options);
 	}

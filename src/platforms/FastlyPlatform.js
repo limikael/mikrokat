@@ -1,7 +1,7 @@
 import BasePlatform from "./BasePlatform.js";
 import {Section} from '@ltd/j-toml';
 import packageVersions from "../main/package-versions.js";
-import {startCommand, findNodeBin} from "../utils/node-util.js";
+import {startCommand, findNodeBin, runCommand} from "../utils/node-util.js";
 
 let FASTLY_STUB=`
 //
@@ -78,6 +78,23 @@ export default class FastlyPlatform extends BasePlatform {
 			"compute","serve",
 			"--dir",this.project.cwd,
 			"--addr","0.0.0.0:"+this.project.port
+		],options);
+	}
+
+	async deploy() {
+		let options={
+			nodeCwd: this.project.cwd,
+			expect: 0,
+		}
+
+		await runCommand("fastly",[
+			"compute","build",
+			"--dir",this.project.cwd,
+		],options);
+
+		return await runCommand("fastly",[
+			"compute","deploy",
+			"--dir",this.project.cwd,
 		],options);
 	}
 }
