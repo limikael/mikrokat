@@ -60,6 +60,29 @@ export async function getPackageInfo(pkgName) {
 	return result;
 }
 
+export function getInstalledDepVersion(depName, cwd) {
+    let currentDir = cwd;
+
+    while (true) {
+        const depPackageJson = path.join(currentDir, "node_modules", depName, "package.json");
+        if (fs.existsSync(depPackageJson)) {
+            try {
+                const pkg = JSON.parse(fs.readFileSync(depPackageJson, "utf8"));
+                return pkg.version;
+            } catch (err) {
+                throw new Error(`Failed to parse ${depPackageJson}: ${err.message}`);
+            }
+        }
+
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) {
+            // Reached filesystem root
+            return null;
+        }
+        currentDir = parentDir;
+    }
+}
+
 export async function checkDependenciesUpToDate(cwd) {
     const pkgPath = path.join(cwd, 'package.json');
     const pkgData = JSON.parse(await fs.promises.readFile(pkgPath, 'utf8'));
@@ -71,7 +94,14 @@ export async function checkDependenciesUpToDate(cwd) {
         if (!semver.validRange(declaredRange))
             continue;
 
-        const modulePkgPath = path.join(cwd, 'node_modules', name, 'package.json');
+        let installedVersion=getInstalledDepVersion(name,cwd);
+
+        if (!installedVersion) {
+            results[name] = { status: 'missing', declared: declaredRange, installed: null };
+            continue;
+        }
+
+        /*const modulePkgPath = path.join(cwd, 'node_modules', name, 'package.json');
         let installedVersion;
         try {
             const modulePkgData = JSON.parse(await fs.promises.readFile(modulePkgPath, 'utf8'));
@@ -79,7 +109,7 @@ export async function checkDependenciesUpToDate(cwd) {
         } catch (e) {
             results[name] = { status: 'missing', declared: declaredRange, installed: null };
             continue;
-        }
+        }*/
 
         const isSatisfied = semver.satisfies(installedVersion, declaredRange, { includePrerelease: true });
         results[name] = {

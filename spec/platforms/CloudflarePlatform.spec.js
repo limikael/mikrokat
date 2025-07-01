@@ -3,6 +3,7 @@ import path from "node:path";
 import {fileURLToPath} from 'url';
 import fs, {promises as fsp} from "fs";
 import {mikrokatInit, mikrokatBuild, mikrokatClean} from "../../src/main/mikrokat-commands.js";
+import packageVersions from "../../src/main/package-versions.js";
 
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
@@ -17,7 +18,7 @@ describe("CloudflarePlatform",()=>{
 		await mikrokatInit({cwd: projectDir, platform: "cloudflare", silent: true})
 
 		let pkg=await JSON.parse(await fsp.readFile(path.join(projectDir,"package.json")));
-		expect(pkg.dependencies.wrangler).toEqual("^4.20.1");
+		expect(pkg.dependencies.wrangler).toEqual("^"+packageVersions.wrangler);
 	});
 
 	it("cloudflare can be built",async ()=>{

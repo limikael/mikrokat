@@ -61,7 +61,12 @@ describe("mikrokat-commands",()=>{
 
 		await mikrokatInit({cwd: projectDir, log: false});
 
-		let server=await mikrokatServe({cwd: projectDir, port: 3000, log: false});
+		let server=await mikrokatServe({
+			cwd: projectDir, 
+			port: 3000, 
+			log: false,
+			dependencyCheck: false,
+		});
 
 		let response=await fetch("http://localhost:3000");
 		let responseBody=await response.text();
