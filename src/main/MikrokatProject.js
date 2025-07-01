@@ -93,6 +93,8 @@ export default class MikrokatProject {
 		else
 			main=arrayify(this.config.main);
 
+		//console.log("main: ",main);
+
 		if (!main.length)
 			throw new DeclaredError("No entrypoint. Pass it on the command line using --main, or put it in the config.");
 
@@ -144,7 +146,7 @@ export default class MikrokatProject {
 		let serviceImports=this.getServiceImports();
 		let fileContent=`fileContent: ${JSON.stringify(await this.getFileContent(),null,2)},\n`;
 		let servicesContent=`services: ${JSON.stringify(applicableServices,null,2)},\n`;
-		let envContent=`env: ${JSON.stringify(this.env,null,2)},\n`;
+		let envContent=`env: ${JSON.stringify({...this.env,...this.config.env},null,2)},\n`;
 
 		let imports=
 			epsImports.imports+
@@ -258,10 +260,12 @@ export default class MikrokatProject {
 		for (let ep of this.getEntrypoints())
 			modules.push(await import(ep));
 
+		//console.log(modules);
+
 		let server=new MikrokatServer({
 			platform: "node",
 			cwd: this.cwd,
-			env: {...this.env, CWD: this.cwd},
+			env: {...this.env, ...this.config.env, CWD: this.cwd},
 			modules: modules,
 			imports: await conditionalImports.loadImports(),
 			fileContent: await this.getFileContent(),

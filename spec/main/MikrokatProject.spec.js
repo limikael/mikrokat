@@ -139,7 +139,10 @@ describe("MikrokatProject",()=>{
 				"files": "myfile.txt",
 				"imports": [
 					{"import": "Database", "from": "better-sqlite3", "if": {"platform": "node"}}
-				]
+				],
+				"env": {
+					"MYVAR": "myvar999"
+				}
 			}
 		`);
 
@@ -152,7 +155,7 @@ describe("MikrokatProject",()=>{
 				let res2=env.DB.prepare("INSERT INTO test (val) VALUES (123)").run();
 				let res3=env.DB.prepare("SELECT * FROM test").all();
 
-				let txt=JSON.stringify(res3)+fs.readFileSync("myfile.txt");
+				let txt=JSON.stringify(res3)+fs.readFileSync("myfile.txt")+env.MYVAR;
 
 				return new Response(txt);
 			}
@@ -163,7 +166,7 @@ describe("MikrokatProject",()=>{
 		let response=await fetch("http://localhost:3000");
 		let responseBody=await response.text();
 
-		expect(responseBody).toEqual(`[{"val":123}]hello world`);
+		expect(responseBody).toEqual(`[{"val":123}]hello worldmyvar999`);
 
 		await project.close();
 	});

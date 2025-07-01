@@ -64,7 +64,7 @@ export default class MikrokatServer {
 			env: this.env,
 			fs: this.fs,
 			imports: this.imports,
-			appData: this.appData,
+			//appData: this.appData,
 			platform: this.platform,
 			localFetch: this.localFetch,
 			getServiceMeta: this.getServiceMeta
