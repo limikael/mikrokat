@@ -15,6 +15,7 @@ import {getPackageVersion} from "../utils/node-util.js";
 import {clauseMatch} from "../utils/clause.js";
 import {getUsedServiceTypes, serviceImportFiles} from "../services/services.js";
 import {processProjectFile} from "../utils/project-util.js";
+import {importWorker} from "../utils/import-worker.js";
 
 let ENTRYPOINT_STUB=
 `export async function onFetch({request}) {
@@ -25,7 +26,7 @@ let ENTRYPOINT_STUB=
 const __dirname=path.dirname(fileURLToPath(import.meta.url));
 
 export default class MikrokatProject {
-	constructor({cwd, main, platform, port, log, config, env, initProject, target, purge, dependencyCheck}={}) {
+	constructor({cwd, main, platform, port, log, config, env, initProject, target, purge, dependencyCheck, worker}={}) {
 		if (target)
 			throw new Error("It is not called target, it is called platform");
 
@@ -38,10 +39,10 @@ export default class MikrokatProject {
 		this.initProject=initProject;
 		this.dependencyCheck=dependencyCheck;
 		this.purge=purge;
+		this.worker=worker;
 
 		if (this.dependencyCheck===undefined)
 			this.dependencyCheck=true;
-
 
 		if (this.initProject===undefined)
 			this.initProject=true;
@@ -52,8 +53,11 @@ export default class MikrokatProject {
 		if (!this.platform)
 			this.platform="node";
 
-		if (typeof log=="function")
+		this.paramLog=log;
+		if (typeof log=="function") {
+			this.paramLog=true;
 			this.log=log;
+		}
 
 		else if (log!==false)
 			this.log=(...args)=>console.log(...args);
@@ -297,6 +301,30 @@ export default class MikrokatProject {
 
 	async serve() {
 		if (this.platform=="node") {
+			if (this.worker) {
+				//console.log("Spawning worker...");
+				let worker=await importWorker(path.join(__dirname,"worker.js"));
+
+				await worker.serve({
+					cwd: this.cwd, 
+					main: this.main, 
+					platform: "node", 
+					port: this.port,
+					config: this.config, 
+					env: this.env, 
+					dependencyCheck: false, 
+					worker: false,
+					log: this.paramLog
+				});
+
+				async function stop() {
+					await worker.terminate();
+				}
+
+				return ({stop});
+			}
+
+			//console.log("Not spawning worker...");
 			await this.build();
 			return await this.serveNode();
 		}

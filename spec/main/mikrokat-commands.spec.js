@@ -76,6 +76,54 @@ describe("mikrokat-commands",()=>{
 		await server.stop();
 	});
 
+	it("can serve a request in a worker",async ()=>{
+		let projectDir=path.join(__dirname,"../tmp/projectw");
+
+		await fsp.rm(projectDir,{force:true, recursive: true});
+		await fsp.mkdir(projectDir,{recursive: true});
+		await fsp.writeFile(path.join(projectDir,"package.json"),"{}")
+
+		await mikrokatInit({cwd: projectDir, log: false});
+
+		// Testing once.
+		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
+			export async function onFetch() { return new Response("hello"); }
+		`);
+
+		let server=await mikrokatServe({
+			cwd: projectDir, 
+			port: 3000, 
+			log: false,
+			dependencyCheck: false,
+			worker: true
+		});
+
+		let response=await fetch("http://localhost:3000");
+		let responseBody=await response.text();
+		expect(responseBody).toEqual(`hello`);
+
+		await server.stop();
+
+		// Testing again... If a worker is not used, the module will be cached.
+		await fsp.writeFile(path.join(projectDir,"src/main/server.js"),`
+			export async function onFetch() { return new Response("hello again"); }
+		`);
+
+		let server2=await mikrokatServe({
+			cwd: projectDir, 
+			port: 3000, 
+			log: false,
+			dependencyCheck: false,
+			worker: true
+		});
+
+		let response2=await fetch("http://localhost:3000");
+		let responseBody2=await response2.text();
+		expect(responseBody2).toEqual(`hello again`);
+
+		await server2.stop();
+	});
+
 	it("can build",async ()=>{
 		let projectDir=path.join(__dirname,"../tmp/project_cf");
 

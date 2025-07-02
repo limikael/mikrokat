@@ -76,3 +76,31 @@ export class ResolvablePromise extends Promise {
         this.rejectClosure(reason);
     }
 }
+
+export function awaitEvent(...args) {
+    let argsObj=objectifyArgs(args,["eventTarget", "type", "predicate"]);
+    let {eventTarget, type, predicate, error}=argsObj;
+
+    return new Promise((resolve, reject)=>{
+        function messageHandler(message) {
+            if (!predicate || predicate(message)) {
+                if (error)
+                    eventTarget.off(error,errorHandler);
+
+                resolve(message);
+            }
+        }
+
+        function errorHandler(e) {
+            eventTarget.off(type,messageHandler);
+            if (error)
+                eventTarget.off(error,errorHandler);
+
+            reject(e);
+        }
+
+        eventTarget.on(type,messageHandler);
+        if (error)
+            eventTarget.on(error,errorHandler);
+    });
+}
