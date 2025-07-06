@@ -27,7 +27,7 @@ describe("ConditionalImports",()=>{
 		expect(imports.testAlias2).toEqual(undefined);
 	});
 
-	it("can generate a stub",()=>{
+	it("can generate a stub",async ()=>{
 		let conditionalImports=new ConditionalImports({
 			cwd: __dirname,
 			truth: {target: "node"},
@@ -40,7 +40,7 @@ describe("ConditionalImports",()=>{
 			]
 		});
 
-		let stub=conditionalImports.getImportStub();
+		let stub=await conditionalImports.getImportStub();
 		//console.log(stub);
 		expect(stub.imports).toEqual(`import __A from "/home/micke/Repo/mikrokat/spec/utils/ImportA.js";
 import {test as __test,test2 as __test2} from "/home/micke/Repo/mikrokat/spec/utils/ImportA.js";

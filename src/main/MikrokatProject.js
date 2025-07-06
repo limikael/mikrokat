@@ -146,7 +146,7 @@ export default class MikrokatProject {
 		let applicableServices=this.getApplicableServices();
 
 		let epsImports=this.getEntrypointImports(dir);
-		let condImports=this.getConditionalImports().getImportStub();
+		let condImports=await this.getConditionalImports().getImportStub();
 		let serviceImports=this.getServiceImports();
 		let fileContent=`fileContent: ${JSON.stringify(await this.getFileContent(),null,2)},\n`;
 		let servicesContent=`services: ${JSON.stringify(applicableServices,null,2)},\n`;
