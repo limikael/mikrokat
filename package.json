@@ -13,7 +13,8 @@
   "exports": {
     ".": "./src/exports/default.js",
     "./server": "./src/exports/server.js",
-    "./cloudflare-util": "./src/exports/cloudflare-util.js"
+    "./cloudflare-util": "./src/exports/cloudflare-util.js",
+    "./resolve-import": "./src/utils/resolve-import.js"
   },
   "dependencies": {
     "@ltd/j-toml": "^1.38.0",
