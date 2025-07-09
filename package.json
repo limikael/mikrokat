@@ -1,6 +1,6 @@
 {
   "name": "mikrokat",
-  "version": "1.0.27",
+  "version": "1.0.28",
   "bin": {
     "mikrokat": "src/main/mikrokat.js"
   },
@@ -38,6 +38,7 @@
     "jasmine": "^5.8.0",
     "mikrokat": "link:.",
     "netlify-cli": "^22.2.1",
+    "pg": "^8.16.3",
     "vercel": "^44.2.7",
     "wrangler": "^4.22.0"
   }
