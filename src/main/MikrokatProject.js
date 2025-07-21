@@ -221,6 +221,9 @@ export default class MikrokatProject {
 		let env={};
 		for (let k in applicableServices) {
 			let def=applicableServices[k];
+			if (!serviceImportFiles[def.type])
+				throw new DeclaredError("Unknown service type: "+def.type);
+
 			let serviceImport=path.join(__dirname,"../services/",serviceImportFiles[def.type]);
 			let serviceClass=(await import(serviceImport)).default;
 

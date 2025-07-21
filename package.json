@@ -1,6 +1,6 @@
 {
   "name": "mikrokat",
-  "version": "1.0.28",
+  "version": "1.0.29",
   "bin": {
     "mikrokat": "src/main/mikrokat.js"
   },
@@ -33,6 +33,7 @@
   "devDependencies": {
     "@fastly/cli": "^11.3.0",
     "@fastly/js-compute": "^3.34.0",
+    "@libsql/client": "^0.15.10",
     "@neondatabase/serverless": "^1.0.1",
     "better-sqlite3": "^11.10.0",
     "jasmine": "^5.8.0",

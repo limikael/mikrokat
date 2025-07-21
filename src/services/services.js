@@ -15,5 +15,7 @@ export const serviceImportFiles={
 	"neon": "NeonService.js",
 	"better-sqlite3": "BetterSqlite3Service.js",
 	"node-storage": "NodeStorageService.js",
+	"libsql": "LibSqlService.js",
+	"libsqlweb": "LibSqlWebService.js",
 	"postgres": "PostgresService.js"
 };
