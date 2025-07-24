@@ -1,6 +1,6 @@
 {
   "name": "mikrokat",
-  "version": "1.0.29",
+  "version": "1.0.30",
   "bin": {
     "mikrokat": "src/main/mikrokat.js"
   },
@@ -27,7 +27,7 @@
     "resolve": "^1.22.10",
     "resolve.exports": "^2.0.3",
     "semver": "^7.7.2",
-    "serve-fetch": "^1.0.4",
+    "serve-fetch": "^1.0.5",
     "tree-kill": "^1.2.2"
   },
   "devDependencies": {
